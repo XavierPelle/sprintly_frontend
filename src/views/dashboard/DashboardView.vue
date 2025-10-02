@@ -1,26 +1,51 @@
 <template>
   <div class="space-y-6">
-    <!-- Header -->
-    <div>
-      <h1 class="text-2xl font-bold text-gray-900">
-        Bienvenue, {{ authStore.currentUser?.firstName }} 👋
-      </h1>
-      <p class="mt-1 text-sm text-gray-600">
-        Voici un aperçu de votre activité et de vos tâches en cours
-      </p>
+    <!-- Header avec salutation dynamique -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">
+          {{ getGreeting() }}, {{ authStore.currentUser?.firstName }} 👋
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+          {{ getCurrentDate() }}
+        </p>
+      </div>
+      <div class="flex items-center space-x-3">
+        <BaseButton variant="secondary" @click="loadDashboard">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </BaseButton>
+        <router-link to="/backlog">
+          <BaseButton>
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Nouveau ticket
+          </BaseButton>
+        </router-link>
+      </div>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+        <p class="mt-4 text-sm text-gray-600">Chargement de votre tableau de bord...</p>
+      </div>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
-      <p class="text-red-800">{{ error }}</p>
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-red-800">{{ error }}</p>
+      </div>
       <button
         @click="loadDashboard"
-        class="mt-2 text-sm text-red-600 hover:text-red-700 font-medium"
+        class="mt-3 text-sm text-red-600 hover:text-red-700 font-medium"
       >
         Réessayer
       </button>
@@ -28,44 +53,93 @@
 
     <!-- Dashboard Content -->
     <div v-else-if="dashboard">
-      <!-- Stats Cards -->
+      <!-- Stats Cards - Version améliorée -->
       <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Tickets assignés"
+          title="Mes tickets"
           :value="dashboard.assignedTickets.total"
-          :subtitle="`${dashboard.stats.completionRate}% terminés`"
+          :subtitle="`${getInProgressCount()} en cours`"
           color="blue"
           :icon="TicketIcon"
+          :trend="{
+            value: `${dashboard.stats.completionRate}%`,
+            label: 'de complétion',
+            isPositive: dashboard.stats.completionRate >= 50
+          }"
         />
         <StatCard
-          title="Tickets créés"
-          :value="dashboard.createdTickets.total"
-          color="purple"
-          :icon="CreateIcon"
-        />
-        <StatCard
-          title="Commentaires"
-          :value="dashboard.stats.totalComments"
+          title="Points complétés"
+          :value="getCompletedPoints()"
+          :subtitle="`sur ${getTotalAssignedPoints()} pts`"
           color="green"
-          :icon="CommentIcon"
+          :icon="TrophyIcon"
+          :trend="{
+            value: getVelocityText(),
+            label: 'cette semaine',
+            isPositive: true
+          }"
         />
         <StatCard
-          title="Tests réalisés"
-          :value="dashboard.stats.totalTests"
-          color="orange"
+          title="Tests à valider"
+          :value="dashboard.testsToValidate.total"
+          :subtitle="dashboard.testsToValidate.total > 0 ? 'Action requise' : 'Tout est à jour'"
+          :color="dashboard.testsToValidate.total > 0 ? 'orange' : 'green'"
           :icon="TestIcon"
         />
+        <StatCard
+          title="Activité"
+          :value="dashboard.stats.totalComments"
+          subtitle="commentaires"
+          color="purple"
+          :icon="ActivityIcon"
+          :trend="{
+            value: `${dashboard.stats.totalTests}`,
+            label: 'tests réalisés',
+            isPositive: true
+          }"
+        />
+      </div>
+
+      <!-- Statistiques détaillées par statut -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Répartition de mes tickets</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <div
+            v-for="(count, status) in dashboard.assignedTickets.byStatus"
+            :key="status"
+            class="text-center p-3 rounded-lg transition-colors hover:shadow-md"
+            :class="getStatusBgClass(status)"
+          >
+            <p class="text-2xl font-bold" :class="getStatusTextClass(status)">
+              {{ count }}
+            </p>
+            <p class="text-xs mt-1" :class="getStatusTextClass(status)">
+              {{ getStatusLabel(status) }}
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Main Content Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column (2/3) -->
+        <!-- Colonne principale (2/3) -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Tickets urgents -->
+          <!-- Tickets prioritaires -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Tickets urgents</h2>
-              <p class="text-sm text-gray-600">Vos tickets en cours et à faire</p>
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900">
+                  Tickets prioritaires
+                </h2>
+                <p class="text-sm text-gray-600">
+                  {{ dashboard.assignedTickets.urgent.length }} tickets nécessitent votre attention
+                </p>
+              </div>
+              <router-link to="/tickets">
+                <button class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  Voir tous →
+                </button>
+              </router-link>
             </div>
             <div class="p-6">
               <div v-if="dashboard.assignedTickets.urgent.length > 0" class="space-y-3">
@@ -75,129 +149,108 @@
                   :ticket="ticket"
                 />
               </div>
-              <p v-else class="text-center text-gray-500 py-8">
-                Aucun ticket urgent pour le moment 🎉
-              </p>
+              <div v-else class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="mt-4 text-gray-500">Aucun ticket urgent ! 🎉</p>
+                <p class="text-sm text-gray-400 mt-1">Vous êtes à jour sur vos tâches</p>
+              </div>
             </div>
           </div>
 
-          <!-- Sprints actifs -->
+          <!-- Sprints actifs avec détails -->
           <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Sprints actifs</h2>
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-gray-900">Mes sprints actifs</h2>
+                <p class="text-sm text-gray-600">
+                  {{ dashboard.activeSprints.length }} sprint(s) en cours
+                </p>
+              </div>
+              <router-link to="/sprint/kanban">
+                <button class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                  Voir le Kanban →
+                </button>
+              </router-link>
             </div>
             <div class="p-6">
               <div v-if="dashboard.activeSprints.length > 0" class="space-y-4">
                 <div
                   v-for="sprint in dashboard.activeSprints"
                   :key="sprint.id"
-                  class="border border-gray-200 rounded-lg p-4 hover:border-indigo-300 transition-colors"
+                  class="border-l-4 border-indigo-500 bg-gradient-to-r from-indigo-50 to-transparent rounded-r-lg p-4 hover:shadow-md transition-all cursor-pointer"
+                  @click="$router.push(`/sprint/${sprint.id}/details`)"
                 >
-                  <div class="flex items-center justify-between mb-3">
-                    <h3 class="font-medium text-gray-900">{{ sprint.name }}</h3>
-                    <span class="text-sm text-gray-500">
-                      {{ sprint.progressPercentage }}%
-                    </span>
+                  <!-- Sprint Header -->
+                  <div class="flex items-start justify-between mb-3">
+                    <div class="flex-1">
+                      <h3 class="font-semibold text-gray-900 flex items-center">
+                        <svg class="w-5 h-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        {{ sprint.name }}
+                      </h3>
+                      <p class="text-sm text-gray-600 mt-1">
+                        Se termine {{ formatDateRelative(sprint.endDate) }}
+                      </p>
+                    </div>
+                    <div class="text-right">
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                        :class="getSprintStatusClass(sprint.progressPercentage)">
+                        {{ sprint.progressPercentage }}%
+                      </span>
+                    </div>
                   </div>
-                  
-                  <!-- Progress bar -->
-                  <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+
+                  <!-- Progress Bar -->
+                  <div class="w-full bg-gray-200 rounded-full h-3 mb-3 overflow-hidden">
                     <div
-                      class="bg-indigo-600 h-2 rounded-full transition-all"
+                      class="h-3 rounded-full transition-all duration-500 bg-gradient-to-r from-indigo-500 to-purple-600"
                       :style="{ width: `${sprint.progressPercentage}%` }"
                     ></div>
                   </div>
 
-                  <div class="flex items-center justify-between text-sm">
-                    <span class="text-gray-600">
-                      {{ sprint.userTicketsCount }} tickets
-                      ({{ sprint.userTicketsPoints }}/{{ sprint.totalPoints }} pts)
-                    </span>
-                    <span class="text-gray-500">
-                      {{ formatDate(sprint.endDate) }}
-                    </span>
+                  <!-- Sprint Stats -->
+                  <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-white rounded-lg p-2">
+                      <p class="text-lg font-bold text-indigo-600">{{ sprint.userTicketsCount }}</p>
+                      <p class="text-xs text-gray-600">Mes tickets</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-2">
+                      <p class="text-lg font-bold text-purple-600">{{ sprint.userTicketsPoints }}</p>
+                      <p class="text-xs text-gray-600">Mes points</p>
+                    </div>
+                    <div class="bg-white rounded-lg p-2">
+                      <p class="text-lg font-bold text-gray-600">{{ sprint.totalPoints }}</p>
+                      <p class="text-xs text-gray-600">Total sprint</p>
+                    </div>
                   </div>
                 </div>
               </div>
-              <p v-else class="text-center text-gray-500 py-8">
-                Aucun sprint actif
+              <div v-else class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <p class="mt-4 text-gray-500">Aucun sprint actif</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tickets récemment créés -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">
+                Tickets récemment créés
+              </h2>
+              <p class="text-sm text-gray-600">
+                {{ dashboard.createdTickets.total }} tickets créés au total
               </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right Column (1/3) -->
-        <div class="space-y-6">
-          <!-- Tests à valider -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <div class="flex items-center justify-between">
-                <h2 class="text-lg font-semibold text-gray-900">Tests à valider</h2>
-                <span
-                  v-if="dashboard.testsToValidate.total > 0"
-                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"
-                >
-                  {{ dashboard.testsToValidate.total }}
-                </span>
-              </div>
-            </div>
-            <div class="divide-y divide-gray-200">
-              <div
-                v-for="test in dashboard.testsToValidate.tests.slice(0, 5)"
-                :key="test.id"
-                class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
-              >
-                <p class="text-sm font-medium text-gray-900 mb-1">
-                  {{ test.ticketKey }}
-                </p>
-                <p class="text-xs text-gray-600 line-clamp-2 mb-2">
-                  {{ test.description }}
-                </p>
-                <div class="flex items-center justify-between text-xs">
-                  <span class="text-gray-500">{{ test.createdBy }}</span>
-                  <span class="text-gray-400">{{ formatDate(test.createdAt) }}</span>
-                </div>
-              </div>
-              <div v-if="dashboard.testsToValidate.tests.length === 0" class="px-6 py-8 text-center">
-                <p class="text-gray-500 text-sm">Aucun test en attente</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Activité récente -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Activité récente</h2>
-            </div>
-            <div class="p-6 space-y-4">
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Dernier commentaire</span>
-                <span class="text-sm font-medium text-gray-900">
-                  {{ dashboard.recentActivity.lastCommentDate 
-                    ? formatDate(dashboard.recentActivity.lastCommentDate)
-                    : 'Aucun' }}
-                </span>
-              </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-gray-600">Dernier test</span>
-                <span class="text-sm font-medium text-gray-900">
-                  {{ dashboard.recentActivity.lastTestDate 
-                    ? formatDate(dashboard.recentActivity.lastTestDate)
-                    : 'Aucun' }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tickets récents créés -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-semibold text-gray-900">Récemment créés</h2>
             </div>
             <div class="p-6">
               <div v-if="dashboard.createdTickets.recent.length > 0" class="space-y-3">
                 <TicketCard
-                  v-for="ticket in dashboard.createdTickets.recent.slice(0, 3)"
+                  v-for="ticket in dashboard.createdTickets.recent"
                   :key="ticket.id"
                   :ticket="ticket"
                 />
@@ -205,6 +258,152 @@
               <p v-else class="text-center text-gray-500 py-8 text-sm">
                 Aucun ticket créé récemment
               </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne latérale (1/3) -->
+        <div class="space-y-6">
+          <!-- Tests à valider - Version améliorée -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="text-lg font-semibold text-gray-900">Tests à valider</h2>
+                  <p class="text-sm text-gray-600">Action requise</p>
+                </div>
+                <span
+                  v-if="dashboard.testsToValidate.total > 0"
+                  class="inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold bg-orange-100 text-orange-800"
+                >
+                  {{ dashboard.testsToValidate.total }}
+                </span>
+              </div>
+            </div>
+            <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+              <router-link
+                v-for="test in dashboard.testsToValidate.tests.slice(0, 5)"
+                :key="test.id"
+                :to="`/tickets/${test.ticketKey.split('-')[1]}`"
+                class="block px-6 py-4 hover:bg-orange-50 transition-colors"
+              >
+                <div class="flex items-start space-x-3">
+                  <div class="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 mb-1">
+                      {{ test.ticketKey }} - {{ test.ticketTitle }}
+                    </p>
+                    <p class="text-xs text-gray-600 line-clamp-2 mb-2">
+                      {{ test.description }}
+                    </p>
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="text-gray-500 flex items-center">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                        {{ test.createdBy }}
+                      </span>
+                      <span class="text-gray-400">{{ formatDate(test.createdAt) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </router-link>
+              <div v-if="dashboard.testsToValidate.tests.length === 0" class="px-6 py-12 text-center">
+                <svg class="mx-auto h-10 w-10 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-gray-500 text-sm mt-2">Aucun test en attente</p>
+              </div>
+            </div>
+            <div v-if="dashboard.testsToValidate.total > 5" class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+              <router-link to="/tests" class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                Voir tous les tests ({{ dashboard.testsToValidate.total }}) →
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Activité récente améliorée -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">Mon activité</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              <!-- Dernière activité -->
+              <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <div class="ml-3 flex-1">
+                  <p class="text-sm font-medium text-gray-900">Dernier commentaire</p>
+                  <p class="text-xs text-gray-600">
+                    {{ dashboard.recentActivity.lastCommentDate 
+                      ? formatDateRelative(dashboard.recentActivity.lastCommentDate)
+                      : 'Aucune activité' }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div class="ml-3 flex-1">
+                  <p class="text-sm font-medium text-gray-900">Dernier test</p>
+                  <p class="text-xs text-gray-600">
+                    {{ dashboard.recentActivity.lastTestDate 
+                      ? formatDateRelative(dashboard.recentActivity.lastTestDate)
+                      : 'Aucun test' }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Stats d'activité -->
+              <div class="pt-4 border-t border-gray-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Total commentaires</span>
+                  <span class="text-sm font-semibold text-gray-900">{{ dashboard.stats.totalComments }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Total tests</span>
+                  <span class="text-sm font-semibold text-gray-900">{{ dashboard.stats.totalTests }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Taux de complétion</span>
+                  <span class="text-sm font-semibold text-indigo-600">{{ dashboard.stats.completionRate }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vue rapide des types de tickets -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h2 class="text-lg font-semibold text-gray-900">Répartition par type</h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-3">
+                <div
+                  v-for="type in ['bug', 'feature', 'task', 'improvement']"
+                  :key="type"
+                  class="flex items-center justify-between p-3 rounded-lg transition-colors hover:bg-gray-50"
+                >
+                  <div class="flex items-center space-x-3">
+                    <span class="text-2xl">{{ getTypeIcon(type) }}</span>
+                    <span class="text-sm font-medium text-gray-700">{{ getTypeLabel(type) }}</span>
+                  </div>
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ getTicketCountByType(type) }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -218,8 +417,10 @@ import { ref, onMounted, h } from 'vue';
 import { useAuthStore } from '@/stores/auth.store';
 import { userApi } from '@/api/user.api';
 import type { UserDashboard } from '@/types/dashboard.types';
+import type { TicketStatus, TicketType } from '@/types/ticket.types';
 import StatCard from '@/components/common/StatCard.vue';
 import TicketCard from '@/components/features/ticket/TicketCard.vue';
+import BaseButton from '@/components/common/BaseButton.vue';
 
 const authStore = useAuthStore();
 
@@ -240,7 +441,7 @@ const TicketIcon = () => h('svg', {
   d: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'
 }));
 
-const CreateIcon = () => h('svg', {
+const TrophyIcon = () => h('svg', {
   class: 'w-6 h-6',
   fill: 'none',
   stroke: 'currentColor',
@@ -249,19 +450,7 @@ const CreateIcon = () => h('svg', {
   'stroke-linecap': 'round',
   'stroke-linejoin': 'round',
   'stroke-width': '2',
-  d: 'M12 4v16m8-8H4'
-}));
-
-const CommentIcon = () => h('svg', {
-  class: 'w-6 h-6',
-  fill: 'none',
-  stroke: 'currentColor',
-  viewBox: '0 0 24 24'
-}, h('path', {
-  'stroke-linecap': 'round',
-  'stroke-linejoin': 'round',
-  'stroke-width': '2',
-  d: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z'
+  d: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
 }));
 
 const TestIcon = () => h('svg', {
@@ -274,6 +463,18 @@ const TestIcon = () => h('svg', {
   'stroke-linejoin': 'round',
   'stroke-width': '2',
   d: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
+}));
+
+const ActivityIcon = () => h('svg', {
+  class: 'w-6 h-6',
+  fill: 'none',
+  stroke: 'currentColor',
+  viewBox: '0 0 24 24'
+}, h('path', {
+  'stroke-linecap': 'round',
+  'stroke-linejoin': 'round',
+  'stroke-width': '2',
+  d: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
 }));
 
 async function loadDashboard() {
@@ -290,24 +491,166 @@ async function loadDashboard() {
   }
 }
 
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Bonjour';
+  if (hour < 18) return 'Bon après-midi';
+  return 'Bonsoir';
+}
+
+function getCurrentDate(): string {
+  const options: Intl.DateTimeFormatOptions = { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  return new Date().toLocaleDateString('fr-FR', options);
+}
+
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) {
-    return "Aujourd'hui";
-  } else if (diffDays === 1) {
-    return 'Hier';
-  } else if (diffDays < 7) {
-    return `Il y a ${diffDays} jours`;
-  } else {
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  if (diffDays === 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  if (diffDays < 7) return `Il y a ${diffDays}j`;
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function formatDateRelative(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 1) return "À l'instant";
+  if (diffMins < 60) return `Il y a ${diffMins} min`;
+  if (diffHours < 24) return `Il y a ${diffHours}h`;
+  if (diffDays === 0) return "Aujourd'hui";
+  if (diffDays === 1) return 'Hier';
+  if (diffDays < 7) return `Il y a ${diffDays} jours`;
+  if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
+  return date.toLocaleDateString('fr-FR');
+}
+
+function getInProgressCount(): number {
+  if (!dashboard.value) return 0;
+  return dashboard.value.assignedTickets.byStatus['EN_COURS'] || 0;
+}
+
+function getCompletedPoints(): number {
+  if (!dashboard.value) return 0;
+  const completedStatuses: TicketStatus[] = ['TEST_OK' as TicketStatus, 'PRODUCTION' as TicketStatus];
+  let total = 0;
+  for (const status of completedStatuses) {
+    total += dashboard.value.assignedTickets.byStatus[status] || 0;
   }
+  return total;
+}
+
+function getTotalAssignedPoints(): number {
+  if (!dashboard.value) return 0;
+  return Object.values(dashboard.value.assignedTickets.byStatus).reduce((sum, count) => sum + count, 0);
+}
+
+function getVelocityText(): string {
+  if (!dashboard.value) return '0 pts';
+  const completed = getCompletedPoints();
+  return `${completed} pts`;
+}
+
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    A_FAIRE: 'À faire',
+    EN_COURS: 'En cours',
+    REVISION: 'Révision',
+    DEMANDE_MODIFICATION: 'Modif.',
+    TEST: 'Test',
+    TEST_KO: 'Test KO',
+    TEST_OK: 'Test OK',
+    PRODUCTION: 'Production'
+  };
+  return labels[status] || status;
+}
+
+function getStatusBgClass(status: string): string {
+  const classes: Record<string, string> = {
+    A_FAIRE: 'bg-gray-100',
+    EN_COURS: 'bg-blue-100',
+    REVISION: 'bg-purple-100',
+    DEMANDE_MODIFICATION: 'bg-orange-100',
+    TEST: 'bg-yellow-100',
+    TEST_KO: 'bg-red-100',
+    TEST_OK: 'bg-green-100',
+    PRODUCTION: 'bg-emerald-100'
+  };
+  return classes[status] || 'bg-gray-100';
+}
+
+function getStatusTextClass(status: string): string {
+  const classes: Record<string, string> = {
+    A_FAIRE: 'text-gray-700',
+    EN_COURS: 'text-blue-700',
+    REVISION: 'text-purple-700',
+    DEMANDE_MODIFICATION: 'text-orange-700',
+    TEST: 'text-yellow-700',
+    TEST_KO: 'text-red-700',
+    TEST_OK: 'text-green-700',
+    PRODUCTION: 'text-emerald-700'
+  };
+  return classes[status] || 'text-gray-700';
+}
+
+function getSprintStatusClass(percentage: number): string {
+  if (percentage >= 80) return 'bg-green-100 text-green-800';
+  if (percentage >= 50) return 'bg-blue-100 text-blue-800';
+  if (percentage >= 25) return 'bg-yellow-100 text-yellow-800';
+  return 'bg-gray-100 text-gray-800';
+}
+
+function getTypeIcon(type: string): string {
+  const icons: Record<string, string> = {
+    bug: '🐛',
+    feature: '✨',
+    task: '📋',
+    improvement: '⚡'
+  };
+  return icons[type] || '📋';
+}
+
+function getTypeLabel(type: string): string {
+  const labels: Record<string, string> = {
+    bug: 'Bug',
+    feature: 'Feature',
+    task: 'Tâche',
+    improvement: 'Amélioration'
+  };
+  return labels[type] || type;
+}
+
+function getTicketCountByType(type: string): number {
+  if (!dashboard.value) return 0;
+  // Cette fonction devrait idéalement utiliser des données du dashboard
+  // Pour l'instant, on retourne 0 car ces données ne sont pas dans le type UserDashboard
+  // Vous pouvez ajouter cette information au backend si nécessaire
+  return 0;
 }
 
 onMounted(() => {
   loadDashboard();
 });
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

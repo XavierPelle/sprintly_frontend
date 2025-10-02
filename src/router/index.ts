@@ -48,14 +48,26 @@ const routes: RouteRecordRaw[] = [
         path: 'sprint',
         children: [
           {
+            path: '',
+            redirect: '/sprint/manage'
+          },
+          {
+            path: 'manage',
+            name: 'SprintManagement',
+            component: () => import('@/views/sprint/SprintManagementView.vue'),
+            meta: { title: 'Gestion des Sprints' }
+          },
+          {
             path: 'kanban',
             name: 'Kanban',
-            component: () => import('@/views/sprint/KanbanView.vue')
+            component: () => import('@/views/sprint/KanbanView.vue'),
+            meta: { title: 'Kanban' }
           },
           {
             path: ':id/details',
             name: 'SprintDetails',
-            component: () => import('@/views/sprint/SprintDetailsView.vue')
+            component: () => import('@/views/sprint/SprintDetailsView.vue'),
+            meta: { title: 'Détails du Sprint' }
           }
         ]
       },
@@ -85,20 +97,11 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/test/TestListView.vue')
       },
     ]
-  },  
+  },
   {
     path: '/toast-demo',
     name: 'ToastDemo',
     component: () => import('@/views/ToastDemo.vue'),
-    meta: {
-      requiresAuth: false,
-      title: 'Toast Demo'
-    }
-  },
-    {
-    path: '/sprint-management',
-    name: 'SprintManagement',
-    component: () => import('@/components/features/sprint/SprintManagementView.vue'),
     meta: {
       requiresAuth: false,
       title: 'Toast Demo'

@@ -38,7 +38,7 @@ export const userApi = {
       confirmPassword: string;
     }
   ): Promise<{ message: string; updatedAt: string }> {
-    const response = await apiClient.patch(`/users/${userId}/password`, payload);
+    const response = await apiClient.put(`/users/${userId}/password`, payload);
     return response.data;
   },
 

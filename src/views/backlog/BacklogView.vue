@@ -102,6 +102,7 @@
               v-for="sprint in upcomingSprints"
               :key="sprint.id"
               class="p-3 border border-gray-200 rounded-lg hover:border-indigo-300 cursor-pointer transition-colors"
+              :class="{ 'border-indigo-500 bg-indigo-50': selectedSprintForTickets?.id === sprint.id }"
               @click="selectedSprintForTickets = sprint"
             >
               <h3 class="font-medium text-gray-900 text-sm">{{ sprint.name }}</h3>
@@ -128,13 +129,13 @@
               <span class="text-sm text-gray-600">
                 {{ selectedTickets.length }} sélectionné(s)
               </span>
-                <BaseButton
-                  size="sm"
-                  @click="assignTicketsToSprint"
-                  :disabled="!selectedSprintForTickets || selectedTickets.length === 0"
-                >
-                  Assigner au sprint
-                </BaseButton>
+              <BaseButton
+                size="sm"
+                @click="assignTicketsToSprint"
+                :disabled="!selectedSprintForTickets || selectedTickets.length === 0"
+              >
+                Assigner au sprint
+              </BaseButton>
             </div>
           </div>
 
@@ -202,11 +203,7 @@
     </div>
 
     <!-- Modal Create Sprint -->
-    <BaseModal
-      v-model="showCreateSprintModal"
-      title="Créer un sprint"
-      size="md"
-    >
+    <BaseModal v-model="showCreateSprintModal" title="Créer un sprint" size="md">
       <div class="space-y-4">
         <BaseInput
           v-model="newSprint.name"
@@ -238,85 +235,24 @@
       </div>
       <template #footer>
         <div class="flex justify-end space-x-3">
-          <BaseButton
-            variant="secondary"
-            @click="showCreateSprintModal = false"
-          >
+          <BaseButton variant="secondary" @click="showCreateSprintModal = false">
             Annuler
           </BaseButton>
-          <BaseButton
-            @click="handleCreateSprint"
-            :loading="creatingSprint"
-          >
+          <BaseButton @click="handleCreateSprint" :loading="creatingSprint">
             Créer
           </BaseButton>
         </div>
       </template>
     </BaseModal>
 
-    <!-- Modal Create Ticket -->
-    <BaseModal
+    <!-- Modal Create Ticket - Nouvelle modal améliorée -->
+    <CreateTicketModal
       v-model="showCreateTicketModal"
-      title="Créer un ticket"
-      size="lg"
-    >
-      <div class="space-y-4">
-        <BaseInput
-          v-model="newTicket.title"
-          label="Titre"
-          placeholder="Titre du ticket"
-          required
-        />
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            v-model="newTicket.description"
-            rows="4"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-            placeholder="Description détaillée..."
-          ></textarea>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select
-              v-model="newTicket.type"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="bug">🐛 Bug</option>
-              <option value="feature">✨ Feature</option>
-              <option value="task">📋 Tâche</option>
-              <option value="improvement">⚡ Amélioration</option>
-            </select>
-          </div>
-          <BaseInput
-            v-model.number="newTicket.difficultyPoints"
-            type="number"
-            label="Points de difficulté"
-            placeholder="5"
-            required
-          />
-        </div>
-      </div>
-      <template #footer>
-        <div class="flex justify-end space-x-3">
-          <BaseButton
-            variant="secondary"
-            @click="showCreateTicketModal = false"
-          >
-            Annuler
-          </BaseButton>
-          <BaseButton
-            @click="handleCreateTicket"
-            :loading="creatingTicket"
-          >
-            Créer
-          </BaseButton>
-        </div>
-      </template>
-    </BaseModal>
+      :users="users"
+      :sprints="allSprints"
+      @create="handleCreateTicket"
+      @saveDraft="handleSaveDraft"
+    />
   </div>
 </template>
 
@@ -332,6 +268,7 @@ import type { AuthUser } from '@/types/auth.types';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseModal from '@/components/common/BaseModal.vue';
+import CreateTicketModal from '@/components/features/ticket/CreateTicketModal.vue';
 import { useToast } from '@/composables/useToast';
 
 const router = useRouter();
@@ -357,7 +294,6 @@ const filters = ref({
 // Modals
 const showCreateSprintModal = ref(false);
 const showCreateTicketModal = ref(false);
-const showAssignSprintModal = ref(false);
 
 // Forms
 const newSprint = ref<CreateSprintPayload>({
@@ -365,13 +301,6 @@ const newSprint = ref<CreateSprintPayload>({
   maxPoints: 100,
   startDate: '',
   endDate: ''
-});
-
-const newTicket = ref<CreateTicketPayload>({
-  title: '',
-  description: '',
-  type: 'task' as TicketType,
-  difficultyPoints: 5
 });
 
 const creatingSprint = ref(false);
@@ -425,43 +354,71 @@ async function handleCreateSprint() {
 
   try {
     await sprintApi.create(newSprint.value);
-    
+
+    toast.success('Sprint créé avec succès !');
     showCreateSprintModal.value = false;
+    
     newSprint.value = {
       name: '',
       maxPoints: 100,
       startDate: '',
       endDate: ''
     };
-    
+
     await loadSprints();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Erreur lors de la création du sprint';
+    toast.error(error.value);
   } finally {
     creatingSprint.value = false;
   }
 }
 
-async function handleCreateTicket() {
+async function handleCreateTicket(data: any) {
   creatingTicket.value = true;
+  error.value = null;
 
   try {
-    await ticketApi.create(newTicket.value);
-    
-    showCreateTicketModal.value = false;
-    newTicket.value = {
-      title: '',
-      description: '',
-      type: 'task' as TicketType,
-      difficultyPoints: 5
+    // Préparer le payload
+    const payload: CreateTicketPayload = {
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      difficultyPoints: data.difficultyPoints,
+      assigneeId: data.assigneeId || undefined,
+      sprintId: data.sprintId || undefined
     };
-    
+
+    // Créer le ticket
+    const newTicket = await ticketApi.create(payload);
+
+    // TODO: Upload des images si présentes
+    // if (data.images && data.images.length > 0) {
+    //   await uploadTicketImages(newTicket.id, data.images);
+    // }
+
+    toast.success('Ticket créé avec succès !');
+    showCreateTicketModal.value = false;
+
+    // Recharger la liste des tickets
     await loadBacklogTickets();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Erreur lors de la création du ticket';
+    toast.error(error.value);
   } finally {
     creatingTicket.value = false;
   }
+}
+
+function handleSaveDraft(data: any) {
+  // Sauvegarder le brouillon dans le localStorage
+  localStorage.setItem('ticketDraft', JSON.stringify({
+    ...data,
+    savedAt: new Date().toISOString()
+  }));
+  
+  toast.info('Brouillon enregistré localement');
+  showCreateTicketModal.value = false;
 }
 
 function handleTicketClick(ticket: Ticket) {
@@ -534,12 +491,11 @@ const assignTicketsToSprint = async () => {
     );
 
     toast.success(`${selectedTickets.value.length} ticket(s) assigné(s) au sprint ${selectedSprintForTickets.value.name}`);
-    
+
     selectedTickets.value = [];
     selectedSprintForTickets.value = null;
-    
+
     await loadBacklogTickets();
-    
   } catch (error: any) {
     console.error('Erreur:', error);
     toast.error(error.response?.data?.message || 'Erreur lors de l\'assignation des tickets');

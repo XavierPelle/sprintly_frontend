@@ -7,11 +7,11 @@
         <!-- Header -->
         <div class="flex items-center space-x-3 mb-2">
           <div class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
-            {{ test.user.firstName[0] }}{{ test.user.lastName[0] }}
+            {{ test.user?.firstName[0] }}{{ test.user?.lastName[0] }}
           </div>
           <div>
             <p class="text-sm font-medium text-gray-900">
-              {{ test.user.firstName }} {{ test.user.lastName }}
+              {{ test.user?.firstName }} {{ test.user?.lastName }}
             </p>
             <p class="text-xs text-gray-500">
               {{ formatDate(test.createdAt) }}

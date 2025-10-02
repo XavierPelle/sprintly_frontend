@@ -30,7 +30,7 @@ export const testApi = {
    * Valider ou rejeter un test
    */
   async validate(testId: number, payload: ValidateTestPayload): Promise<Test> {
-    const response = await apiClient.patch<Test>(`/tests/${testId}/validate`, payload);
+    const response = await apiClient.put<Test>(`/tests/${testId}/validate`, payload);
     return response.data;
   },
 

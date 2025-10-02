@@ -83,7 +83,7 @@ export const ticketApi = {
    * Assigner un ticket à un utilisateur
    */
   async assign(ticketId: number, userId: number | null): Promise<{ message: string }> {
-    const response = await apiClient.patch(`/tickets/${ticketId}/assign`, { userId });
+    const response = await apiClient.put(`/tickets/${ticketId}/assign`, { userId });
     return response.data;
   },
 
@@ -99,7 +99,7 @@ export const ticketApi = {
    * Changer le statut d'un ticket
    */
   async changeStatus(ticketId: number, status: TicketStatus): Promise<{ message: string }> {
-    const response = await apiClient.patch(`/tickets/${ticketId}/status`, { status });
+    const response = await apiClient.put(`/tickets/${ticketId}/status`, { status });
     return response.data;
   },
 
