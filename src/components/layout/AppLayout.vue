@@ -1,24 +1,12 @@
-<!-- src/components/layout/AppLayout.vue -->
-
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- Header -->
+  <div class="min-h-screen bg-gray-50 flex flex-col">
     <AppHeader />
-
-    <!-- Sidebar + Contenu -->
-    <div class="flex pt-16">
-      <!-- Sidebar -->
+    <div class="flex flex-1 pt-16 overflow-hidden">
       <AppSidebar :is-open="sidebarOpen" @toggle="toggleSidebar" />
-
-      <!-- Main Content -->
-      <main
-        class="flex-1 transition-all duration-300"
-        :class="sidebarOpen ? 'ml-64' : 'ml-0'"
-      >
-        <div 
-          class="mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-all duration-300"
-          :class="sidebarOpen ? 'max-w-7xl' : 'max-w-[95%]'"
-        >
+      <main class="flex-1 transition-all duration-300 overflow-hidden" :class="sidebarOpen ? 'ml-64' : 'ml-0'">
+        <div class="h-full transition-all duration-300" :class="[
+          isKanbanRoute ? 'w-full' : (sidebarOpen ? 'max-w-7xl mx-auto' : 'max-w-[95%] mx-auto'),
+          isKanbanRoute ? '' : 'px-4 sm:px-6 lg:px-8 py-8 overflow-y-auto']">
           <router-view />
         </div>
       </main>
@@ -27,11 +15,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import AppHeader from './AppHeader.vue';
 import AppSidebar from './AppSidebar.vue';
 
+const route = useRoute();
 const sidebarOpen = ref(true);
+
+const isKanbanRoute = computed(() => {
+  return route.path === '/sprint/kanban';
+});
 
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value;
