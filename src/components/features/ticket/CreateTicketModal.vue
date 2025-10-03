@@ -269,7 +269,7 @@
             Assigner à
           </label>
           <select
-            v-model="form.assigneeId"
+            v-model="form.assignee"
             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option :value="null">Non assigné</option>
@@ -391,7 +391,7 @@
 import { ref, computed } from 'vue';
 import BaseModal from '@/components/common/BaseModal.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
-import type { TicketType } from '@/types/ticket.types';
+import type { TicketPriority, TicketType } from '@/types/ticket.types';
 
 interface Props {
   modelValue: boolean;
@@ -419,12 +419,12 @@ const form = ref({
   title: '',
   description: '',
   type: 'task' as TicketType,
-  priority: 'medium',
+  priority: 'MEDIUM' as TicketPriority, 
   difficultyPoints: 5,
-  assigneeId: null as number | null,
+  assignee: null as number | null,
   sprintId: null as number | null,
   dueDate: '',
-  tags: ''
+  tags: '',
 });
 
 const images = ref<Array<{
@@ -442,10 +442,10 @@ const ticketTypes = [
 ];
 
 const priorities = [
-  { value: 'low', label: 'Faible', color: 'bg-gray-100 text-gray-700' },
-  { value: 'medium', label: 'Moyenne', color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'high', label: 'Haute', color: 'bg-orange-100 text-orange-700' },
-  { value: 'critical', label: 'Critique', color: 'bg-red-100 text-red-700' }
+  { value: 'LOW', label: 'Faible', color: 'bg-gray-100 text-gray-700' },
+  { value: 'MEDIUM', label: 'Moyenne', color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'HIGH', label: 'Haute', color: 'bg-orange-100 text-orange-700' },
+  { value: 'CRITICAL', label: 'Critique', color: 'bg-red-100 text-red-700' }
 ];
 
 const fibonacciPoints = [1, 2, 3, 5, 8, 13, 21];

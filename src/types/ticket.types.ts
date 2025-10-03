@@ -16,6 +16,13 @@ export enum TicketType {
   IMPROVEMENT = 'improvement'
 }
 
+export enum TicketPriority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL",
+}
+
 export interface Ticket {
   id: number;
   key: string;
@@ -26,6 +33,7 @@ export interface Ticket {
   difficultyPoints: number;
   createdAt: string;
   updatedAt: string;
+  priority: string;
   creator: {
     id: number;
     firstName: string;
@@ -91,7 +99,8 @@ export interface CreateTicketPayload {
   description: string;
   type: TicketType;
   difficultyPoints: number;
-  assigneeId?: number;
+  assignee?: number;
   sprintId?: number;
   projectPrefix?: string;
+  priority: TicketPriority;
 }

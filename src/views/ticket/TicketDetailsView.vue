@@ -1,4 +1,4 @@
-<!-- src/views/ticket/TicketDetailsView.vue - VERSION COMPLETE -->
+<!-- src/views/ticket/TicketDetailsView.vue -->
 
 <template>
   <div class="space-y-6">
@@ -102,7 +102,6 @@
               Ajouter
             </button>
             <input ref="imageInput" type="file" accept="image/*" class="hidden" @change="handleImageUpload" />
-
           </div>
 
           <div class="p-6">
@@ -110,14 +109,24 @@
             <div v-if="sortedImages.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div v-for="image in sortedImages" :key="image.id" class="relative group">
                 <div
-                  class="relative cursor-pointer rounded-lg overflow-hidden border-2 border-gray-200 hover:border-indigo-400 transition-all aspect-square"
+                  class="relative cursor-pointer rounded-lg overflow-hidden border-2 border-gray-200 hover:border-indigo-400 transition-all aspect-square bg-gray-100"
                   @click="openImageViewer(image)">
-                  <img :src="`http://localhost:3000${image.url}`" :alt="image.filename" class="w-full h-full object-cover" loading="lazy" />
+                  
+                  <img 
+                    :src="getImageFullUrl(image)" 
+                    :alt="image.filename" 
+                    class="absolute inset-0 w-full h-full object-cover"
+                    loading="lazy"
+                  />
 
-                  <!-- Hover Overlay -->
+                  <!-- Hover Overlay - uniquement visible au hover -->
                   <div
-                    class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2">
+                    class="absolute inset-0 bg-black opacity-0 group-hover:opacity-40 transition-opacity flex items-center justify-center pointer-events-none">
+                  </div>
+                  
+                  <!-- Buttons Container -->
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <div class="flex items-center space-x-2 pointer-events-auto">
                       <!-- View Icon -->
                       <button @click.stop="openImageViewer(image)"
                         class="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors" title="Voir l'image">
@@ -141,7 +150,7 @@
                   </div>
 
                   <!-- Order Badge -->
-                  <div class="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                  <div class="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded z-10">
                     #{{ image.displayOrder }}
                   </div>
                 </div>
@@ -362,7 +371,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Assigner à</label>
-          <select v-model="editForm.assigneeId"
+          <select v-model="editForm.assignee"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
             <option :value="null">Non assigné</option>
             <option v-for="user in users" :key="user.id" :value="user.id">
@@ -451,7 +460,7 @@ const editForm = ref({
   description: '',
   type: 'task' as TicketType,
   difficultyPoints: 0,
-  assigneeId: null as number | null
+  assignee: null as number | null
 });
 
 // Images
@@ -469,6 +478,17 @@ const canDeleteImages = computed(() => {
   return authStore.currentUser?.id === ticket.value?.creator.id;
 });
 
+// Helper pour construire l'URL complète de l'image
+function getImageFullUrl(image: { url: string }): string {
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+  
+  if (image.url.startsWith('http://') || image.url.startsWith('https://')) {
+    return image.url;
+  }
+  
+  return `${baseUrl}${image.url}`;
+}
+
 async function loadTicket() {
   loading.value = true;
   error.value = null;
@@ -477,14 +497,13 @@ async function loadTicket() {
     const ticketId = parseInt(route.params.id as string);
     ticket.value = await ticketApi.getDetails(ticketId);
 
-    // Initialize edit form
     if (ticket.value) {
       editForm.value = {
         title: ticket.value.title,
         description: ticket.value.description,
         type: ticket.value.type,
         difficultyPoints: ticket.value.difficultyPoints,
-        assigneeId: ticket.value.assignee?.id || null
+        assignee: ticket.value.assignee?.id || null
       };
     }
   } catch (err: any) {
@@ -510,7 +529,7 @@ function openEditModal() {
       description: ticket.value.description,
       type: ticket.value.type,
       difficultyPoints: ticket.value.difficultyPoints,
-      assigneeId: ticket.value.assignee?.id || null
+      assignee: ticket.value.assignee?.id || null
     };
     showEditModal.value = true;
   }
@@ -536,7 +555,6 @@ async function handleUpdateTicket() {
 
   try {
     await ticketApi.update(ticket.value.id, editForm.value);
-
     toast.success('Ticket mis à jour');
     showEditModal.value = false;
     await loadTicket();
@@ -653,7 +671,6 @@ async function handleValidateTest(test: Test, isValidated: boolean) {
   }
 }
 
-// Image functions
 function triggerImageUpload() {
   imageInput.value?.click();
 }
@@ -662,7 +679,7 @@ async function handleImageUpload(event: Event) {
   if (!ticket.value) return;
 
   const target = event.target as HTMLInputElement;
-  const file = target.files?.[0];   // une seule image
+  const file = target.files?.[0];
   if (!file) return;
 
   uploadingImages.value = true;
@@ -670,7 +687,6 @@ async function handleImageUpload(event: Event) {
   try {
     const uploadedImage = await imageApi.uploadForTicket(ticket.value.id, [file], 'TICKET_ATTACHMENT');
     if (uploadedImage) {
-      console.log(uploadedImage)
       if (ticket.value.images) {
         ticket.value.images.push(uploadedImage);
       } else {
@@ -694,7 +710,6 @@ async function handleImageUpload(event: Event) {
     uploadingImages.value = false;
   }
 }
-
 
 async function handleImageDelete(image: { id: number; url: string; filename: string; displayOrder: number }) {
   if (!ticket.value) return;

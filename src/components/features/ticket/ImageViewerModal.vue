@@ -27,17 +27,15 @@
             
             <div class="flex items-center space-x-2 ml-4">
               <!-- Download Button -->
-              <a
-                :href="currentImage.url"
-                :download="currentImage.filename"
-                target="_blank"
+              <button
+                @click="downloadImage"
                 class="p-2 hover:bg-white hover:bg-opacity-10 rounded-lg transition-colors"
                 title="Télécharger"
               >
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-              </a>
+              </button>
               
               <!-- Close Button -->
               <button
@@ -54,42 +52,62 @@
         </div>
 
         <!-- Image Container -->
-        <div class="flex items-center justify-center h-full p-4 pt-20 pb-20">
-          <div class="relative max-w-7xl max-h-full">
-            <!-- Previous Button -->
-            <button
-              v-if="images.length > 1"
-              @click="previous"
-              class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full transition-all z-10"
-              :disabled="currentIndex === 0"
-              :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+        <div class="flex items-center justify-center h-full p-4 pt-20 pb-20 relative" @wheel.prevent="handleWheel">
+          <!-- Previous Button - Outside image -->
+          <button
+            v-if="images.length > 1"
+            @click="previous"
+            class="absolute left-8 top-1/2 -translate-y-1/2 p-4 bg-black bg-opacity-70 hover:bg-opacity-90 text-white rounded-full transition-all z-20 shadow-xl"
+            :disabled="currentIndex === 0"
+            :class="{ 'opacity-30 cursor-not-allowed': currentIndex === 0 }"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
 
-            <!-- Image -->
+          <!-- Image with zoom and pan -->
+          <div 
+            ref="imageContainer"
+            class="overflow-hidden"
+            :class="{ 
+              'cursor-grab': scale > 1 && !isDragging, 
+              'cursor-grabbing': scale > 1 && isDragging,
+              'cursor-zoom-in': scale === 1
+            }"
+            @mousedown="startDrag"
+            @mousemove="drag"
+            @mouseup="endDrag"
+            @mouseleave="endDrag"
+            @dblclick="resetZoom"
+          >
             <img
-              :src="currentImage.url"
+              ref="imageElement"
+              :src="getImageFullUrl(currentImage)"
               :alt="currentImage.filename"
-              class="max-w-full max-h-[calc(100vh-10rem)] object-contain"
+              class="max-w-full max-h-[calc(100vh-10rem)] object-contain select-none"
+              :style="{
+                transform: `scale(${scale}) translate(${translateX}px, ${translateY}px)`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+              }"
               @click.stop
+              draggable="false"
             />
-
-            <!-- Next Button -->
-            <button
-              v-if="images.length > 1"
-              @click="next"
-              class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black bg-opacity-50 hover:bg-opacity-70 text-white rounded-full transition-all z-10"
-              :disabled="currentIndex === images.length - 1"
-              :class="{ 'opacity-50 cursor-not-allowed': currentIndex === images.length - 1 }"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
+
+          <!-- Next Button - Outside image -->
+          <button
+            v-if="images.length > 1"
+            @click="next"
+            class="absolute right-8 top-1/2 -translate-y-1/2 p-4 bg-black bg-opacity-70 hover:bg-opacity-90 text-white rounded-full transition-all z-20 shadow-xl"
+            :disabled="currentIndex === images.length - 1"
+            :class="{ 'opacity-30 cursor-not-allowed': currentIndex === images.length - 1 }"
+          >
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
 
         <!-- Thumbnail Strip -->
@@ -110,7 +128,7 @@
               "
             >
               <img
-                :src="image.url"
+                :src="getImageFullUrl(image)"
                 :alt="image.filename"
                 class="w-full h-full object-cover"
               />
@@ -120,7 +138,7 @@
 
         <!-- Keyboard Hint -->
         <div class="absolute bottom-4 left-4 text-white text-xs opacity-50">
-          <p>← → : Naviguer | Échap : Fermer</p>
+          <p>← → : Naviguer | Échap : Fermer | Molette : Zoomer | Double-clic : Réinitialiser</p>
         </div>
       </div>
     </transition>
@@ -150,6 +168,18 @@ const emit = defineEmits<{
 }>();
 
 const currentIndex = ref(0);
+const imageContainer = ref<HTMLDivElement | null>(null);
+const imageElement = ref<HTMLImageElement | null>(null);
+
+// Zoom and pan state
+const scale = ref(1);
+const translateX = ref(0);
+const translateY = ref(0);
+const isDragging = ref(false);
+const dragStartX = ref(0);
+const dragStartY = ref(0);
+const dragStartTranslateX = ref(0);
+const dragStartTranslateY = ref(0);
 
 const currentImage = computed(() => {
   return sortedImages.value[currentIndex.value];
@@ -158,6 +188,94 @@ const currentImage = computed(() => {
 const sortedImages = computed(() => {
   return [...props.images].sort((a, b) => a.displayOrder - b.displayOrder);
 });
+
+// Helper pour construire l'URL complète de l'image
+function getImageFullUrl(image: TicketImage): string {
+  const baseUrl = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+  
+  if (image.url.startsWith('http://') || image.url.startsWith('https://')) {
+    return image.url;
+  }
+  
+  return `${baseUrl}${image.url}`;
+}
+
+// Zoom with mouse wheel
+function handleWheel(event: WheelEvent) {
+  event.preventDefault();
+  
+  // Inverser la logique et augmenter la vitesse
+  const delta = event.deltaY < 0 ? 0.3 : -0.3; // Zoom plus rapide (0.3 au lieu de 0.1)
+  const newScale = Math.min(Math.max(1, scale.value + delta), 5); // Min 1x, Max 5x
+  
+  scale.value = newScale;
+  
+  // Reset translation when zooming out to 1x
+  if (newScale === 1) {
+    translateX.value = 0;
+    translateY.value = 0;
+  }
+}
+
+// Drag to pan
+function startDrag(event: MouseEvent) {
+  if (scale.value <= 1) return;
+  
+  isDragging.value = true;
+  dragStartX.value = event.clientX;
+  dragStartY.value = event.clientY;
+  dragStartTranslateX.value = translateX.value;
+  dragStartTranslateY.value = translateY.value;
+}
+
+function drag(event: MouseEvent) {
+  if (!isDragging.value || scale.value <= 1) return;
+  
+  const deltaX = event.clientX - dragStartX.value;
+  const deltaY = event.clientY - dragStartY.value;
+  
+  translateX.value = dragStartTranslateX.value + deltaX / scale.value;
+  translateY.value = dragStartTranslateY.value + deltaY / scale.value;
+}
+
+function endDrag() {
+  isDragging.value = false;
+}
+
+// Reset zoom and pan
+function resetZoom() {
+  scale.value = 1;
+  translateX.value = 0;
+  translateY.value = 0;
+}
+
+// Reset zoom when changing image
+watch(currentIndex, () => {
+  resetZoom();
+});
+
+// Download image
+async function downloadImage() {
+  try {
+    const imageUrl = getImageFullUrl(currentImage.value);
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = currentImage.value.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Erreur lors du téléchargement:', error);
+    // Fallback: ouvrir dans un nouvel onglet
+    window.open(getImageFullUrl(currentImage.value), '_blank');
+  }
+}
 
 // Initialize with the selected image
 watch(() => props.initialImageId, (imageId) => {

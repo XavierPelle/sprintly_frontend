@@ -1,6 +1,5 @@
 // src/types/dashboard.types.ts
-
-import type { TicketStatus } from './ticket.types'
+import type { TicketStatus, TicketPriority } from './ticket.types'
 
 export interface UserDashboard {
   user: {
@@ -9,7 +8,6 @@ export interface UserDashboard {
     lastName: string;
     email: string;
   };
-
   assignedTickets: {
     total: number;
     byStatus: Record<TicketStatus, number>;
@@ -19,9 +17,9 @@ export interface UserDashboard {
       title: string;
       status: TicketStatus;
       difficultyPoints: number;
+      priority: TicketPriority;
     }>;
   };
-
   createdTickets: {
     total: number;
     byStatus: Record<TicketStatus, number>;
@@ -31,9 +29,9 @@ export interface UserDashboard {
       title: string;
       status: TicketStatus;
       createdAt: string;
+      priority: TicketPriority; // Ajout de la priorité
     }>;
   };
-
   activeSprints: Array<{
     id: number;
     name: string;
@@ -44,7 +42,6 @@ export interface UserDashboard {
     totalPoints: number;
     progressPercentage: number;
   }>;
-
   testsToValidate: {
     total: number;
     tests: Array<{
@@ -56,14 +53,12 @@ export interface UserDashboard {
       createdBy: string;
     }>;
   };
-
   recentActivity: {
     commentsCount: number;
     testsCount: number;
     lastCommentDate: string | null;
     lastTestDate: string | null;
   };
-
   stats: {
     totalTicketsCreated: number;
     totalTicketsAssigned: number;

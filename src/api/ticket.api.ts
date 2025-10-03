@@ -7,11 +7,12 @@ export interface SearchTicketsParams {
   query?: string;
   status?: TicketStatus;
   type?: string;
-  assigneeId?: number;
+  assignee?: number;
   creatorId?: number;
   sprintId?: number;
   minPoints?: number;
   maxPoints?: number;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH'| 'CRITICAL';
   sortBy?: 'createdAt' | 'updatedAt' | 'difficultyPoints' | 'key';
   sortOrder?: 'ASC' | 'DESC';
   page?: number;
@@ -99,7 +100,7 @@ export const ticketApi = {
    * Changer le statut d'un ticket
    */
   async changeStatus(ticketId: number, status: TicketStatus): Promise<{ message: string }> {
-    const response = await apiClient.put(`/tickets/${ticketId}/status`, { status });
+    const response = await apiClient.patch(`/tickets/${ticketId}/status`, { status });
     return response.data;
   },
 

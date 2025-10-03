@@ -1,5 +1,3 @@
-<!-- src/views/backlog/BacklogView.vue -->
-
 <template>
   <div class="space-y-6">
     <!-- Header -->
@@ -41,7 +39,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
           <select
-            v-model="filters.assigneeId"
+            v-model="filters.assignee"
             @change="loadBacklogTickets"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
@@ -91,13 +89,50 @@
 
     <!-- Content -->
     <div v-else class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      <!-- Sprints à venir (1/4) -->
-      <div class="lg:col-span-1">
+      <!-- Sprints en cours et à venir (1/4) -->
+      <div class="lg:col-span-1 space-y-4">
+        <!-- Sprints en cours -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div class="px-4 py-3 border-b border-gray-200">
-            <h2 class="font-semibold text-gray-900">Sprints à venir</h2>
+          <div class="px-4 py-3 border-b border-gray-200 bg-blue-50">
+            <h2 class="font-semibold text-blue-900 flex items-center">
+              <span class="mr-2">🏃</span>
+              Sprints en cours ({{ activeSprints.length }})
+            </h2>
           </div>
-          <div class="p-4 space-y-3">
+          <div class="p-4 space-y-3 max-h-64 overflow-y-auto">
+            <div
+              v-for="sprint in activeSprints"
+              :key="sprint.id"
+              class="p-3 border border-blue-200 rounded-lg hover:border-blue-400 cursor-pointer transition-colors bg-blue-50"
+              :class="{ 'border-blue-500 bg-blue-100 shadow-sm': selectedSprintForTickets?.id === sprint.id }"
+              @click="selectedSprintForTickets = sprint"
+            >
+              <h3 class="font-medium text-gray-900 text-sm">{{ sprint.name }}</h3>
+              <div class="mt-2 space-y-1">
+                <div class="flex items-center justify-between text-xs text-gray-600">
+                  <span>📅 {{ formatDate(sprint.startDate) }} - {{ formatDate(sprint.endDate) }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-gray-600">
+                  <span>{{ sprint.maxPoints }} pts max</span>
+                  <span class="text-blue-600 font-medium">En cours</span>
+                </div>
+              </div>
+            </div>
+            <p v-if="activeSprints.length === 0" class="text-center text-gray-500 text-sm py-4">
+              Aucun sprint en cours
+            </p>
+          </div>
+        </div>
+
+        <!-- Sprints à venir -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-4 py-3 border-b border-gray-200 bg-indigo-50">
+            <h2 class="font-semibold text-indigo-900 flex items-center">
+              <span class="mr-2">📅</span>
+              Sprints à venir ({{ upcomingSprints.length }})
+            </h2>
+          </div>
+          <div class="p-4 space-y-3 max-h-96 overflow-y-auto">
             <div
               v-for="sprint in upcomingSprints"
               :key="sprint.id"
@@ -106,9 +141,14 @@
               @click="selectedSprintForTickets = sprint"
             >
               <h3 class="font-medium text-gray-900 text-sm">{{ sprint.name }}</h3>
-              <div class="mt-2 flex items-center justify-between text-xs text-gray-600">
-                <span>{{ formatDate(sprint.startDate) }}</span>
-                <span>{{ sprint.maxPoints }} pts max</span>
+              <div class="mt-2 space-y-1">
+                <div class="flex items-center justify-between text-xs text-gray-600">
+                  <span>📅 Début {{ formatDate(sprint.startDate) }}</span>
+                </div>
+                <div class="flex items-center justify-between text-xs text-gray-600">
+                  <span>{{ sprint.maxPoints }} pts max</span>
+                  <span class="text-indigo-600 font-medium">{{ getDaysUntilStart(sprint.startDate) }}</span>
+                </div>
               </div>
             </div>
             <p v-if="upcomingSprints.length === 0" class="text-center text-gray-500 text-sm py-4">
@@ -245,7 +285,7 @@
       </template>
     </BaseModal>
 
-    <!-- Modal Create Ticket - Nouvelle modal améliorée -->
+    <!-- Modal Create Ticket -->
     <CreateTicketModal
       v-model="showCreateTicketModal"
       :users="users"
@@ -286,7 +326,7 @@ const selectedSprintForTickets = ref<Sprint | null>(null);
 // Filters
 const filters = ref({
   type: null as string | null,
-  assigneeId: null as number | null,
+  assignee: null as number | null,
   sortBy: 'createdAt' as 'createdAt' | 'difficultyPoints' | 'key',
   sortOrder: 'DESC' as 'ASC' | 'DESC'
 });
@@ -306,9 +346,20 @@ const newSprint = ref<CreateSprintPayload>({
 const creatingSprint = ref(false);
 const creatingTicket = ref(false);
 
+// Computed: sprints en cours (entre startDate et endDate)
+const activeSprints = computed(() => {
+  const now = new Date();
+  return allSprints.value
+    .filter(s => new Date(s.startDate) <= now && new Date(s.endDate) >= now)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+});
+
+// Computed: sprints à venir (startDate dans le futur)
 const upcomingSprints = computed(() => {
   const now = new Date();
-  return allSprints.value.filter(s => new Date(s.startDate) > now);
+  return allSprints.value
+    .filter(s => new Date(s.startDate) > now)
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 });
 
 async function loadBacklogTickets() {
@@ -319,10 +370,10 @@ async function loadBacklogTickets() {
     const response = await ticketApi.search({
       sprintId: undefined, // Tickets sans sprint
       type: filters.value.type as any,
-      assigneeId: filters.value.assigneeId || undefined,
+      assignee: filters.value.assignee || undefined,
       sortBy: filters.value.sortBy,
       sortOrder: filters.value.sortOrder,
-      limit: 100
+      limit: 100,
     });
 
     backlogTickets.value = response.tickets.filter(t => !t.sprint);
@@ -379,28 +430,21 @@ async function handleCreateTicket(data: any) {
   error.value = null;
 
   try {
-    // Préparer le payload
     const payload: CreateTicketPayload = {
       title: data.title,
       description: data.description,
       type: data.type,
       difficultyPoints: data.difficultyPoints,
-      assigneeId: data.assigneeId || undefined,
-      sprintId: data.sprintId || undefined
+      assignee: data.assignee || undefined,
+      sprintId: data.sprintId || undefined,
+      priority: data.priority
     };
 
-    // Créer le ticket
-    const newTicket = await ticketApi.create(payload);
-
-    // TODO: Upload des images si présentes
-    // if (data.images && data.images.length > 0) {
-    //   await uploadTicketImages(newTicket.id, data.images);
-    // }
+    await ticketApi.create(payload);
 
     toast.success('Ticket créé avec succès !');
     showCreateTicketModal.value = false;
 
-    // Recharger la liste des tickets
     await loadBacklogTickets();
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Erreur lors de la création du ticket';
@@ -411,7 +455,6 @@ async function handleCreateTicket(data: any) {
 }
 
 function handleSaveDraft(data: any) {
-  // Sauvegarder le brouillon dans le localStorage
   localStorage.setItem('ticketDraft', JSON.stringify({
     ...data,
     savedAt: new Date().toISOString()
@@ -475,7 +518,18 @@ function getStatusLabel(status: TicketStatus): string {
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function getDaysUntilStart(startDate: string): string {
+  const start = new Date(startDate);
+  const now = new Date();
+  const diffTime = start.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return "Démarre aujourd'hui";
+  if (diffDays === 1) return "Démarre demain";
+  return `Dans ${diffDays} jours`;
 }
 
 const assignTicketsToSprint = async () => {

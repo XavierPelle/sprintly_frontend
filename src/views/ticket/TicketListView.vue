@@ -114,7 +114,7 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Assigné à</label>
           <select
-            v-model="filters.assigneeId"
+            v-model="filters.assignee"
             @change="handleSearch"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
@@ -392,7 +392,7 @@ const filters = ref({
   status: null as TicketStatus | null,
   type: null as string | null,
   sprintId: null as number | null,
-  assigneeId: null as number | null,
+  assignee: null as number | null,
   sortBy: 'createdAt' as 'createdAt' | 'updatedAt' | 'difficultyPoints' | 'key',
   sortOrder: 'DESC' as 'ASC' | 'DESC'
 });
@@ -465,7 +465,7 @@ async function handleSearch() {
       status: filters.value.status || undefined,
       type: filters.value.type || undefined,
       sprintId: filters.value.sprintId === 0 ? undefined : filters.value.sprintId || undefined,
-      assigneeId: filters.value.assigneeId || undefined,
+      assignee: filters.value.assignee || undefined,
       sortBy: filters.value.sortBy,
       sortOrder: filters.value.sortOrder,
       page: pagination.value.page,
@@ -488,7 +488,7 @@ function handleResetFilters() {
     status: null,
     type: null,
     sprintId: null,
-    assigneeId: null,
+    assignee: null,
     sortBy: 'createdAt',
     sortOrder: 'DESC'
   };
