@@ -8,49 +8,34 @@
         <div>
           <h1 class="text-xl font-bold text-gray-900">Kanban Board</h1>
           <p v-if="currentSprint" class="text-xs text-gray-600">
-            {{ currentSprint.name }} - {{ formatDate(currentSprint.startDate) }} au {{ formatDate(currentSprint.endDate) }}
+            {{ currentSprint.name }} - {{ formatDate(currentSprint.startDate) }} au {{ formatDate(currentSprint.endDate)
+            }}
           </p>
         </div>
 
         <!-- Actions -->
         <div class="flex items-center space-x-2">
           <!-- Sélecteur de sprint -->
-          <select
-            v-model="selectedSprintId"
-            @change="handleSprintChange"
-            class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-          >
+          <select v-model="selectedSprintId" @change="handleSprintChange"
+            class="px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
             <option :value="null">Sélectionner un sprint</option>
             <optgroup label="Sprints actifs">
-              <option
-                v-for="sprint in activeSprints"
-                :key="sprint.id"
-                :value="sprint.id"
-              >
+              <option v-for="sprint in activeSprints" :key="sprint.id" :value="sprint.id">
                 {{ sprint.name }}
               </option>
             </optgroup>
             <optgroup v-if="upcomingSprints.length > 0" label="Sprints à venir">
-              <option
-                v-for="sprint in upcomingSprints"
-                :key="sprint.id"
-                :value="sprint.id"
-              >
+              <option v-for="sprint in upcomingSprints" :key="sprint.id" :value="sprint.id">
                 {{ sprint.name }}
               </option>
             </optgroup>
           </select>
 
           <!-- Bouton refresh -->
-          <BaseButton
-            variant="secondary"
-            size="sm"
-            @click="loadTickets"
-            :loading="loading"
-            title="Actualiser"
-          >
+          <BaseButton variant="secondary" size="sm" @click="loadTickets" :loading="loading" title="Actualiser">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
           </BaseButton>
         </div>
@@ -62,18 +47,12 @@
         <div class="flex items-center gap-3">
           <span class="text-sm font-semibold text-gray-700">Type:</span>
           <div class="flex gap-2">
-            <button
-              v-for="type in ticketTypes"
-              :key="type.value"
-              @click="toggleTypeFilter(type.value)"
-              :class="[
-                'px-3 py-2 rounded-lg text-base font-medium transition-all border-2',
-                filters.types.includes(type.value)
-                  ? 'bg-indigo-100 border-indigo-400 text-indigo-800 shadow-sm'
-                  : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-              ]"
-              :title="type.label"
-            >
+            <button v-for="type in ticketTypes" :key="type.value" @click="toggleTypeFilter(type.value)" :class="[
+              'px-3 py-2 rounded-lg text-base font-medium transition-all border-2',
+              filters.types.includes(type.value)
+                ? 'bg-indigo-100 border-indigo-400 text-indigo-800 shadow-sm'
+                : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+            ]" :title="type.label">
               {{ type.icon }}
             </button>
           </div>
@@ -84,32 +63,23 @@
           <span class="text-sm font-semibold text-gray-700">Assigné:</span>
           <div class="flex gap-2">
             <!-- Non assigné -->
-            <button
-              @click="toggleAssigneeFilter(0)"
-              :class="[
-                'w-9 h-9 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-all',
-                filters.assigneeIds.includes(0)
-                  ? 'border-indigo-600 bg-indigo-100 text-indigo-800 shadow-sm'
-                  : 'border-gray-300 bg-gray-100 text-gray-600 hover:border-gray-400'
-              ]"
-              title="Non assigné"
-            >
+            <button @click="toggleAssigneeFilter(0)" :class="[
+              'w-9 h-9 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-all',
+              filters.assigneeIds.includes(0)
+                ? 'border-indigo-600 bg-indigo-100 text-indigo-800 shadow-sm'
+                : 'border-gray-300 bg-gray-100 text-gray-600 hover:border-gray-400'
+            ]" title="Non assigné">
               ?
             </button>
             <!-- Avatars utilisateurs -->
-            <button
-              v-for="assignee in uniqueAssignees"
-              :key="assignee.id"
-              @click="toggleAssigneeFilter(assignee.id)"
+            <button v-for="assignee in uniqueAssignees" :key="assignee.id" @click="toggleAssigneeFilter(assignee.id)"
               :class="[
                 'w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2',
                 filters.assigneeIds.includes(assignee.id)
                   ? 'border-indigo-600 ring-2 ring-indigo-200 shadow-sm'
                   : 'border-transparent hover:border-gray-300'
-              ]"
-              :style="{ backgroundColor: getAvatarColor(assignee.id) }"
-              :title="`${assignee.firstName} ${assignee.lastName}`"
-            >
+              ]" :style="{ backgroundColor: getAvatarColor(assignee.id) }"
+              :title="`${assignee.firstName} ${assignee.lastName}`">
               <span class="text-white">
                 {{ assignee.firstName[0] }}{{ assignee.lastName[0] }}
               </span>
@@ -121,18 +91,12 @@
         <div class="flex items-center gap-3">
           <span class="text-sm font-semibold text-gray-700">Points:</span>
           <div class="flex gap-2">
-            <button
-              v-for="point in pointsOptions"
-              :key="point"
-              @click="togglePointsFilter(point)"
-              :class="[
-                'w-9 h-9 rounded-lg text-sm font-bold transition-all border-2',
-                filters.points.includes(point)
-                  ? 'bg-purple-100 border-purple-400 text-purple-800 shadow-sm'
-                  : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
-              ]"
-              :title="`${point} points`"
-            >
+            <button v-for="point in pointsOptions" :key="point" @click="togglePointsFilter(point)" :class="[
+              'w-9 h-9 rounded-lg text-sm font-bold transition-all border-2',
+              filters.points.includes(point)
+                ? 'bg-purple-100 border-purple-400 text-purple-800 shadow-sm'
+                : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+            ]" :title="`${point} points`">
               {{ point }}
             </button>
           </div>
@@ -141,26 +105,20 @@
         <!-- Recherche -->
         <div class="flex items-center gap-3 flex-1 min-w-[220px]">
           <span class="text-sm font-semibold text-gray-700">Recherche:</span>
-          <input
-            v-model="filters.search"
-            type="text"
-            placeholder="Titre ou clé..."
-            class="flex-1 px-4 py-2 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
-          />
+          <input v-model="filters.search" type="text" placeholder="Titre ou clé..."
+            class="flex-1 px-4 py-2 text-sm border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white" />
         </div>
 
         <!-- Bouton reset si filtres actifs -->
-        <button
-          v-if="hasActiveFilters"
-          @click="resetFilters"
-          class="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border-2 border-transparent hover:border-red-200"
-        >
+        <button v-if="hasActiveFilters" @click="resetFilters"
+          class="px-4 py-2 text-sm font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors border-2 border-transparent hover:border-red-200">
           Réinitialiser
         </button>
       </div>
 
       <!-- Sprint Stats - Version réduite -->
-      <div v-if="currentSprint && tickets.length > 0" class="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow border border-gray-200 p-3">
+      <div v-if="currentSprint && tickets.length > 0"
+        class="bg-gradient-to-br from-white to-gray-50 rounded-lg shadow border border-gray-200 p-3">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <!-- Carte Tickets -->
           <div class="bg-white rounded-md p-2.5 border border-gray-200 hover:shadow transition-shadow">
@@ -168,7 +126,8 @@
               <div class="flex items-center space-x-2">
                 <div class="w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center">
                   <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
                 <div>
@@ -188,7 +147,8 @@
               <div class="flex items-center space-x-2">
                 <div class="w-7 h-7 rounded-md bg-indigo-100 flex items-center justify-center">
                   <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
                 <div>
@@ -211,7 +171,8 @@
               <div class="flex items-center space-x-2">
                 <div class="w-7 h-7 rounded-md bg-purple-100 flex items-center justify-center">
                   <svg class="w-3.5 h-3.5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>
@@ -223,8 +184,7 @@
             <div class="w-full bg-gray-200 rounded-full h-1.5">
               <div
                 class="bg-gradient-to-r from-purple-500 to-indigo-600 h-1.5 rounded-full transition-all duration-500 relative overflow-hidden"
-                :style="{ width: `${stats.progressPercentage}%` }"
-              >
+                :style="{ width: `${stats.progressPercentage}%` }">
                 <div class="absolute inset-0 bg-white opacity-20 animate-shimmer"></div>
               </div>
             </div>
@@ -236,7 +196,8 @@
               <div class="flex items-center space-x-2">
                 <div class="w-7 h-7 rounded-md bg-emerald-100 flex items-center justify-center">
                   <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
                 <div>
@@ -266,7 +227,8 @@
       <div class="bg-red-50 border border-red-200 rounded-lg p-3">
         <div class="flex items-center text-sm">
           <svg class="w-4 h-4 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p class="text-red-800">{{ error }}</p>
         </div>
@@ -277,7 +239,8 @@
     <div v-else-if="!selectedSprintId" class="flex-1 flex items-center justify-center p-4">
       <div class="text-center">
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
         </svg>
         <h3 class="mt-3 text-sm font-medium text-gray-900">Aucun sprint sélectionné</h3>
         <p class="mt-1 text-xs text-gray-600">
@@ -290,7 +253,8 @@
     <div v-else-if="tickets.length === 0" class="flex-1 flex items-center justify-center p-4">
       <div class="text-center">
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
         </svg>
         <h3 class="mt-3 text-sm font-medium text-gray-900">Aucun ticket</h3>
         <p class="mt-1 text-xs text-gray-600">
@@ -308,84 +272,73 @@
     <div v-else class="flex-1 overflow-auto p-4">
       <div class="flex space-x-2 min-h-full">
         <!-- Colonne pour chaque statut -->
-        <div
-          v-for="column in columns"
-          :key="column.status"
-          class="flex-shrink-0"
-          :class="collapsedColumns.includes(column.status) ? 'w-12' : 'w-72'"
-        >
+        <div v-for="column in columns" :key="column.status" class="flex-shrink-0"
+          :class="collapsedColumns.includes(column.status) ? 'w-12' : 'w-62'">
           <div class="bg-gray-50 rounded-lg h-full flex flex-col shadow-sm border border-gray-200">
             <!-- Column Header -->
             <div class="border-b border-gray-200 px-3 py-2 flex-shrink-0">
               <div class="flex items-center justify-between">
-                <button
-                  @click="toggleColumn(column.status)"
-                  class="flex items-center space-x-1.5 flex-1 min-w-0 hover:opacity-70 transition-opacity"
-                >
-                  <div
-                    class="w-2 h-2 rounded-full flex-shrink-0"
-                    :style="{ backgroundColor: column.color }"
-                  ></div>
-                  <h3 
-                    v-if="!collapsedColumns.includes(column.status)"
-                    class="font-semibold text-gray-900 truncate text-sm"
-                  >
+                <button @click="toggleColumn(column.status)"
+                  class="flex items-center space-x-1.5 flex-1 min-w-0 hover:opacity-70 transition-opacity">
+                  <div class="w-2 h-2 rounded-full flex-shrink-0" :style="{ backgroundColor: column.color }"></div>
+                  <h3 v-if="!collapsedColumns.includes(column.status)"
+                    class="font-semibold text-gray-900 truncate text-sm">
                     {{ column.title }}
                   </h3>
-                  <svg 
-                    v-if="collapsedColumns.includes(column.status)"
-                    class="w-4 h-4 text-gray-500 transform rotate-90" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
+                  <svg v-if="collapsedColumns.includes(column.status)" class="w-4 h-4 text-gray-500 transform rotate-90"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-                <span 
-                  v-if="!collapsedColumns.includes(column.status)"
-                  class="font-medium text-gray-500 bg-white rounded-full text-xs px-2 py-0.5 flex-shrink-0 ml-2"
-                >
+                <span v-if="!collapsedColumns.includes(column.status)"
+                  class="font-medium text-gray-500 bg-white rounded-full text-xs px-2 py-0.5 flex-shrink-0 ml-2">
                   {{ getFilteredTicketsByStatus(column.status).length }}
                 </span>
               </div>
             </div>
 
             <!-- Collapsed view -->
-            <div 
-              v-if="collapsedColumns.includes(column.status)"
-              class="flex-1 flex items-center justify-center"
-            >
+            <div v-if="collapsedColumns.includes(column.status)" class="flex-1 flex items-center justify-center">
               <div class="transform -rotate-90 whitespace-nowrap text-xs font-medium text-gray-600">
                 {{ column.title }} ({{ getFilteredTicketsByStatus(column.status).length }})
               </div>
             </div>
 
             <!-- Drop Zone -->
-            <div
-              v-else
-              class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2"
-              :class="{
-                'bg-indigo-50 ring-2 ring-indigo-300 ring-inset rounded': dragOverColumn === column.status
-              }"
-              @dragover="handleDragOver"
-              @drop="handleDrop($event, column.status)"
-              @dragenter="handleDragEnter(column.status)"
-              @dragleave="handleDragLeave"
-            >
+            <div v-else class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2" :class="{
+              'bg-indigo-50 ring-2 ring-indigo-300 ring-inset rounded': dragOverColumn === column.status
+            }" @dragover="handleDragOver" @drop="handleDrop($event, column.status)"
+              @dragenter="handleDragEnter(column.status)" @dragleave="handleDragLeave">
               <!-- Ticket Cards -->
-              <div
-                v-for="ticket in getFilteredTicketsByStatus(column.status)"
-                :key="ticket.id"
-                draggable="true"
-                @dragstart="handleDragStart(ticket)"
-                @dragend="handleDragEnd"
-                @click="handleTicketClick(ticket)"
-                class="bg-white rounded border border-gray-200 cursor-move hover:shadow-md hover:border-indigo-300 transition-all p-2.5"
-                :class="{
-                  'opacity-50 scale-95': draggedTicket?.id === ticket.id
-                }"
-              >
+              <!-- Ticket Cards -->
+              <div v-for="ticket in getFilteredTicketsByStatus(column.status)" :key="ticket.id"
+                :draggable="!ticket.isBlocked" @dragstart="handleDragStart(ticket)" @dragend="handleDragEnd"
+                @click="handleTicketClick(ticket)" class="rounded border transition-all p-2.5 relative" :class="{
+                  'opacity-50 scale-95': draggedTicket?.id === ticket.id,
+                  'bg-red-50 border-red-300 ring-2 ring-red-200 cursor-not-allowed': ticket.isBlocked,
+                  'bg-white border-gray-200 hover:border-indigo-300 cursor-move hover:shadow-md': !ticket.isBlocked,
+                  'ring-2 ring-orange-300': !ticket.isBlocked && ticket.priority === 'HIGH',
+                  'ring-2 ring-red-400 shadow-lg': !ticket.isBlocked && ticket.priority === 'CRITICAL'
+                }">
+                <!-- Barre de priorité gauche -->
+                <div v-if="ticket.priority === 'HIGH' || ticket.priority === 'CRITICAL'"
+                  class="absolute left-0 top-0 bottom-0 w-1 rounded-l" :class="{
+                    'bg-orange-500': ticket.priority === 'HIGH',
+                    'bg-red-600 animate-pulse': ticket.priority === 'CRITICAL'
+                  }"></div>
+
+                <!-- Badge bloqué -->
+                <div v-if="ticket.isBlocked"
+                  class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-0.5"
+                  :title="ticket.blockedReason || 'Ticket bloqué'">
+                  <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd"
+                      d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  BLOQUÉ
+                </div>
+
                 <!-- Ticket Header -->
                 <div class="flex items-start justify-between mb-2">
                   <div class="flex items-center space-x-1 min-w-0 flex-1">
@@ -396,21 +349,51 @@
                       {{ getTypeIcon(ticket.type) }}
                     </span>
                   </div>
-                  <span
-                    v-if="ticket.difficultyPoints"
-                    class="font-medium text-gray-500 bg-gray-100 rounded flex-shrink-0 ml-1 text-[10px] px-1.5 py-0.5"
-                  >
-                    {{ ticket.difficultyPoints }}
-                  </span>
+                  <div class="flex items-center gap-1 flex-shrink-0 ml-1">
+                    <!-- Badge priorité -->
+                    <span v-if="ticket.priority && ticket.priority !== 'LOW'"
+                      class="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase" :class="{
+                        'bg-yellow-100 text-yellow-800': ticket.priority === 'MEDIUM',
+                        'bg-orange-100 text-orange-800': ticket.priority === 'HIGH',
+                        'bg-red-100 text-red-800': ticket.priority === 'CRITICAL'
+                      }">
+                      {{ ticket.priority === 'MEDIUM' ? 'M' : ticket.priority === 'HIGH' ? 'H' : 'C' }}
+                    </span>
+                    <!-- Points -->
+                    <span v-if="ticket.difficultyPoints"
+                      class="font-medium text-gray-500 bg-gray-100 rounded text-[10px] px-1.5 py-0.5">
+                      {{ ticket.difficultyPoints }}
+                    </span>
+                  </div>
                 </div>
 
                 <!-- Ticket Title -->
-                <h4
-                  class="font-medium text-gray-900 text-xs mb-2 line-clamp-2"
-                  :title="ticket.title"
-                >
+                <h4 class="font-medium text-xs mb-2 line-clamp-2"
+                  :class="ticket.isBlocked ? 'text-red-900' : 'text-gray-900'" :title="ticket.title">
                   {{ ticket.title }}
                 </h4>
+
+                <!-- Tags -->
+                <div v-if="ticket.tags && ticket.tags.length > 0" class="flex flex-wrap gap-1 mb-2">
+                  <span v-for="tag in ticket.tags" :key="tag.id"
+                    class="text-[9px] font-medium px-1.5 py-0.5 rounded-full text-white"
+                    :style="{ backgroundColor: tag.color }" :title="tag.name">
+                    {{ tag.name }}
+                  </span>
+                </div>
+
+                <!-- Message de blocage -->
+                <div v-if="ticket.isBlocked && ticket.blockedReason"
+                  class="mb-2 p-1.5 bg-red-100 border border-red-200 rounded text-[10px] text-red-800">
+                  <div class="flex items-start gap-1">
+                    <svg class="w-3 h-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
+                    </svg>
+                    <span class="line-clamp-2">{{ ticket.blockedReason }}</span>
+                  </div>
+                </div>
 
                 <!-- Ticket Footer -->
                 <div class="flex items-center justify-between">
@@ -418,8 +401,7 @@
                   <div v-if="ticket.assignee" class="flex items-center space-x-1 min-w-0">
                     <div
                       class="bg-indigo-600 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0 w-5 h-5 text-[9px]"
-                      :title="`${ticket.assignee.firstName} ${ticket.assignee.lastName}`"
-                    >
+                      :title="`${ticket.assignee.firstName} ${ticket.assignee.lastName}`">
                       {{ ticket.assignee.firstName[0] }}{{ ticket.assignee.lastName[0] }}
                     </div>
                     <span class="text-[10px] text-gray-600 truncate">
@@ -432,18 +414,12 @@
 
                   <!-- Meta icons -->
                   <div class="flex items-center space-x-0.5 flex-shrink-0">
-                    <span
-                      v-if="ticket.comments && ticket.comments.length > 0"
-                      class="text-gray-500 text-[10px]"
-                      :title="`${ticket.comments.length} commentaires`"
-                    >
+                    <span v-if="ticket.comments && ticket.comments.length > 0" class="text-gray-500 text-[10px]"
+                      :title="`${ticket.comments.length} commentaires`">
                       💬{{ ticket.comments.length }}
                     </span>
-                    <span
-                      v-if="ticket.tests && ticket.tests.length > 0"
-                      class="text-gray-500 text-[10px]"
-                      :title="`${ticket.tests.length} tests`"
-                    >
+                    <span v-if="ticket.tests && ticket.tests.length > 0" class="text-gray-500 text-[10px]"
+                      :title="`${ticket.tests.length} tests`">
                       ✓{{ ticket.tests.length }}
                     </span>
                   </div>
@@ -451,10 +427,8 @@
               </div>
 
               <!-- Empty column message -->
-              <div
-                v-if="getFilteredTicketsByStatus(column.status).length === 0"
-                class="text-center text-gray-400 py-6 text-xs"
-              >
+              <div v-if="getFilteredTicketsByStatus(column.status).length === 0"
+                class="text-center text-gray-400 py-6 text-xs">
                 Vide
               </div>
             </div>
@@ -541,14 +515,14 @@ const uniqueAssignees = computed(() => {
   const assignees = tickets.value
     .filter(t => t.assignee)
     .map(t => t.assignee!);
-  
+
   const uniqueMap = new Map();
   assignees.forEach(a => {
     if (!uniqueMap.has(a.id)) {
       uniqueMap.set(a.id, a);
     }
   });
-  
+
   return Array.from(uniqueMap.values());
 });
 
@@ -577,7 +551,7 @@ const filteredTickets = computed(() => {
 
   // Filtre par points (OU entre les points sélectionnés)
   if (filters.value.points.length > 0) {
-    result = result.filter(t => 
+    result = result.filter(t =>
       t.difficultyPoints && filters.value.points.includes(t.difficultyPoints)
     );
   }
@@ -585,7 +559,7 @@ const filteredTickets = computed(() => {
   // Recherche textuelle (fonctionne indépendamment)
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase();
-    result = result.filter(t => 
+    result = result.filter(t =>
       t.title.toLowerCase().includes(search) ||
       t.key.toLowerCase().includes(search)
     );
@@ -596,9 +570,9 @@ const filteredTickets = computed(() => {
 
 const hasActiveFilters = computed(() => {
   return filters.value.types.length > 0 ||
-         filters.value.assigneeIds.length > 0 ||
-         filters.value.points.length > 0 ||
-         filters.value.search !== '';
+    filters.value.assigneeIds.length > 0 ||
+    filters.value.points.length > 0 ||
+    filters.value.search !== '';
 });
 
 const activeFiltersCount = computed(() => {
@@ -627,14 +601,14 @@ const stats = computed(() => {
     const startDate = new Date(currentSprint.value.startDate);
     const now = new Date();
     const endDate = new Date(currentSprint.value.endDate);
-    
+
     // Nombre de jours écoulés depuis le début du sprint
     const daysElapsed = Math.max(1, Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
-    
+
     // Si le sprint n'est pas encore commencé
     if (now < startDate) {
       velocity = 0;
-    } 
+    }
     // Si le sprint est terminé
     else if (now > endDate) {
       const totalDays = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
@@ -881,6 +855,7 @@ onMounted(async () => {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }

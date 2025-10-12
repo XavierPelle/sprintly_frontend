@@ -83,6 +83,11 @@ const routes: RouteRecordRaw[] = [
             path: ':id',
             name: 'TicketDetails',
             component: () => import('@/views/ticket/TicketDetailsView.vue')
+          },
+          {
+            path: '/tickets/create',
+            name: 'CreateTicket',
+            component: () => import('@/views/ticket/CreateTicketView.vue')
           }
         ]
       },
@@ -96,6 +101,11 @@ const routes: RouteRecordRaw[] = [
         name: 'Tests',
         component: () => import('@/views/test/TestListView.vue')
       },
+      {
+        path: '/tests/:ticketId/new',
+        name: 'test-editor',
+        component: () => import('@/views/test/TestEditorView.vue')
+      }
     ]
   },
   {
