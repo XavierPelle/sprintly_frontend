@@ -108,8 +108,8 @@
             <button
               @click="activeTab = 'tickets'"
               class="px-6 py-3 text-sm font-medium border-b-2 transition-colors"
-              :class="activeTab === 'tickets' 
-                ? 'border-indigo-600 text-indigo-600' 
+              :class="activeTab === 'tickets'
+                ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'"
             >
               Tickets ({{ sprint.tickets?.length || 0 }})
@@ -117,8 +117,8 @@
             <button
               @click="activeTab = 'burndown'"
               class="px-6 py-3 text-sm font-medium border-b-2 transition-colors"
-              :class="activeTab === 'burndown' 
-                ? 'border-indigo-600 text-indigo-600' 
+              :class="activeTab === 'burndown'
+                ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'"
             >
               Burndown Chart
@@ -126,8 +126,8 @@
             <button
               @click="activeTab = 'stats'"
               class="px-6 py-3 text-sm font-medium border-b-2 transition-colors"
-              :class="activeTab === 'stats' 
-                ? 'border-indigo-600 text-indigo-600' 
+              :class="activeTab === 'stats'
+                ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'"
             >
               Statistiques
@@ -303,10 +303,10 @@ function getTypeLabel(type: string): string {
 
 function formatDateLong(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('fr-FR', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+  return date.toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
   });
 }
 

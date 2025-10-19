@@ -1,31 +1,45 @@
 <template>
   <router-link
-    :to="`/tickets/${ticket.id}`"
-    class="block bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md hover:border-indigo-300 transition-all"
+      :to="`/tickets/${ticket.id}`"
+      class="block bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md hover:border-indigo-300 transition-all"
   >
     <div class="flex items-start justify-between">
       <div class="flex-1 min-w-0">
-        <!-- Key et Type -->
         <div class="flex items-center space-x-2 mb-2">
           <span class="text-xs font-mono font-medium text-gray-500">{{ ticket.key }}</span>
           <span
-            class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-            :class="getTypeClass(ticket.type)"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+              :class="getTypeClass(ticket.type)"
           >
             {{ getTypeLabel(ticket.type) }}
           </span>
+          <span
+              v-if="ticket.isBlocked"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-700"
+          >
+            🔒 Bloqué
+          </span>
         </div>
 
-        <!-- Titre -->
-        <h3 class="text-sm font-medium text-gray-900 truncate mb-1">
+        <h3 class="text-sm font-medium text-gray-900 truncate mb-2">
           {{ ticket.title }}
         </h3>
 
-        <!-- Status -->
+        <div v-if="ticket.tags && ticket.tags.length > 0" class="flex flex-wrap gap-1 mb-2">
+          <span
+              v-for="tag in ticket.tags"
+              :key="tag.id"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+              :style="{ backgroundColor: getPastelColor(tag.color), color: getTextColor(tag.color) }"
+          >
+            {{ tag.name || tag.content }}
+          </span>
+        </div>
+
         <div class="flex items-center space-x-2">
           <span
-            class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
-            :class="getStatusClass(ticket.status)"
+              class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium"
+              :class="getStatusClass(ticket.status)"
           >
             {{ getStatusLabel(ticket.status) }}
           </span>
@@ -35,11 +49,10 @@
         </div>
       </div>
 
-      <!-- Avatar assigné -->
       <div v-if="ticket.assignee" class="ml-3">
         <div
-          class="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-medium"
-          :title="`${ticket.assignee.firstName} ${ticket.assignee.lastName}`"
+            class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md"
+            :title="`${ticket.assignee.firstName} ${ticket.assignee.lastName}`"
         >
           {{ ticket.assignee.firstName[0] }}{{ ticket.assignee.lastName[0] }}
         </div>
@@ -52,10 +65,32 @@
 import type { Ticket, TicketStatus, TicketType } from '@/types/ticket.types';
 
 interface Props {
-  ticket: Ticket | any; // any pour accepter les tickets partiels du dashboard
+  ticket: Ticket | any;
 }
 
 defineProps<Props>();
+
+function getPastelColor(hexColor: string): string {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+
+  const pastelR = Math.floor((r + 255 * 2) / 3);
+  const pastelG = Math.floor((g + 255 * 2) / 3);
+  const pastelB = Math.floor((b + 255 * 2) / 3);
+
+  return `#${pastelR.toString(16).padStart(2, '0')}${pastelG.toString(16).padStart(2, '0')}${pastelB.toString(16).padStart(2, '0')}`;
+}
+
+function getTextColor(hexColor: string): string {
+  const hex = hexColor.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#1f2937' : '#374151';
+}
 
 function getStatusClass(status: TicketStatus): string {
   const classes: Record<TicketStatus, string> = {
@@ -99,7 +134,7 @@ function getTypeLabel(type: TicketType): string {
   const labels: Record<TicketType, string> = {
     bug: '🐛 Bug',
     feature: '✨ Feature',
-    task: '📋 Task',
+    task: '📋 Tâche',
     improvement: '⚡ Amélioration'
   };
   return labels[type] || type;

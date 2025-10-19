@@ -255,7 +255,6 @@
       </div>
     </div>
 
-    <!-- Message en dessous si fourni via slot -->
     <slot name="hint"></slot>
   </div>
 </template>

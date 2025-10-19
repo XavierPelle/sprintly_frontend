@@ -34,6 +34,8 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   priority: string;
+  isBlocked: boolean;
+  blockedReason: string;
   creator: {
     id: number;
     firstName: string;
@@ -60,6 +62,8 @@ export interface Ticket {
   }>;
   comments?: Comment[];
   tests?: Test[];
+  branch: string;
+  testLink: string;
 }
 
 export interface TicketDetails extends Ticket {
