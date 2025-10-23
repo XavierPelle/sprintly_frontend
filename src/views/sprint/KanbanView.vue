@@ -101,7 +101,7 @@
           </div>
         </div>
 
-        <!-- NOUVEAU: Filtre par tags minimaliste -->
+        <!-- Filtre par tags minimaliste -->
         <div v-if="allTags.length > 0" class="flex items-center gap-3">
           <span class="text-sm font-semibold text-gray-700">Tags:</span>
           <div class="relative">
@@ -513,7 +513,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ticketApi } from '@/api/ticket.api';
 import { sprintApi } from '@/api/sprint.api';
@@ -525,6 +525,9 @@ import { useToast } from '@/composables/useToast';
 const router = useRouter();
 const toast = useToast();
 
+// Clé pour localStorage
+const FILTERS_STORAGE_KEY = 'kanban-filters';
+
 // State
 const tickets = ref<Ticket[]>([]);
 const allSprints = ref<Sprint[]>([]);
@@ -534,15 +537,51 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const showTagsDropdown = ref(false);
 
-// Filtres - Ajout du filtre tags
+// Fonction pour charger les filtres depuis localStorage
+function loadFiltersFromStorage() {
+  try {
+    const stored = localStorage.getItem(FILTERS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        types: parsed.types || [],
+        assigneeIds: parsed.assigneeIds || [],
+        points: parsed.points || [],
+        tags: parsed.tags || [],
+        search: parsed.search || ''
+      };
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement des filtres:', error);
+  }
+
+  // Valeurs par défaut si rien en storage
+  return {
+    types: [] as TicketType[],
+    assigneeIds: [] as number[],
+    points: [] as number[],
+    tags: [] as number[],
+    search: ''
+  };
+}
+
+// Fonction pour sauvegarder les filtres dans localStorage
+function saveFiltersToStorage() {
+  try {
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters.value));
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde des filtres:', error);
+  }
+}
+
+// Filtres - Initialisés depuis localStorage
 const showFilters = ref(false);
-const filters = ref({
-  types: [] as TicketType[],
-  assigneeIds: [] as number[],
-  points: [] as number[],
-  tags: [] as number[],
-  search: ''
-});
+const filters = ref(loadFiltersFromStorage());
+
+// Watcher pour sauvegarder automatiquement les filtres à chaque modification
+watch(filters, () => {
+  saveFiltersToStorage();
+}, { deep: true });
 
 // Options pour les filtres
 const ticketTypes = [
@@ -663,18 +702,17 @@ const filteredTickets = computed(() => {
     );
   }
 
-  // MODIFIÉ: Filtre par tags (OU au lieu de ET)
+  // Filtre par tags (OU au lieu de ET)
   if (filters.value.tags.length > 0) {
     result = result.filter(ticket => {
       if (!ticket.tags || !Array.isArray(ticket.tags)) return false;
-      // Retourne true si le ticket a AU MOINS UN des tags sélectionnés
       return filters.value.tags.some(selectedTagId =>
           ticket.tags.some((tag: any) => tag.id === selectedTagId)
       );
     });
   }
 
-  // Recherche textuelle (fonctionne indépendamment)
+  // Recherche textuelle
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase();
     result = result.filter(t =>
@@ -685,7 +723,6 @@ const filteredTickets = computed(() => {
 
   return result;
 });
-
 
 const hasActiveFilters = computed(() => {
   return filters.value.types.length > 0 ||
@@ -758,6 +795,7 @@ function resetFilters() {
     tags: [],
     search: ''
   };
+  // Le watcher va automatiquement sauvegarder
 }
 
 // Fonctions de toggle pour les filtres multi-sélection

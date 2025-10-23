@@ -11,7 +11,8 @@
           <div class="flex items-center space-x-6">
             <div class="relative">
               <div class="w-20 h-20 bg-white rounded-2xl shadow-lg flex items-center justify-center">
-                <span class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">
+                <span
+                  class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-purple-600">
                   {{ authStore.currentUser?.firstName[0] }}{{ authStore.currentUser?.lastName[0] }}
                 </span>
               </div>
@@ -28,9 +29,11 @@
           </div>
 
           <div class="flex items-center space-x-3">
-            <BaseButton variant="secondary" size="sm" @click="loadDashboard" class="bg-white/20 hover:bg-white/30 text-white border-white/30">
+            <BaseButton variant="secondary" size="sm" @click="loadDashboard"
+              class="bg-white/20 hover:bg-white/30 text-white border-white/30">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
             </BaseButton>
             <router-link to="/tickets/create">
@@ -49,7 +52,8 @@
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="text-center">
           <div class="relative">
-            <div class="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto"></div>
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600 mx-auto">
+            </div>
             <div class="absolute inset-0 flex items-center justify-center">
               <div class="w-8 h-8 bg-indigo-600 rounded-full animate-pulse"></div>
             </div>
@@ -63,45 +67,64 @@
         <!-- Stats Cards Premium -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <!-- Mes Tickets -->
-          <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div
+            class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
             <div class="relative p-6">
               <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-blue-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
-                  <svg class="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <div
+                  class="w-12 h-12 bg-blue-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-6 h-6 text-blue-600 group-hover:text-white transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <span class="text-xs font-semibold text-blue-600 group-hover:text-white bg-blue-50 group-hover:bg-white/20 px-3 py-1 rounded-full transition-colors">
+                <span
+                  class="text-xs font-semibold text-blue-600 group-hover:text-white bg-blue-50 group-hover:bg-white/20 px-3 py-1 rounded-full transition-colors">
                   {{ getInProgressCount() }} actifs
                 </span>
               </div>
-              <h3 class="text-sm font-medium text-gray-600 group-hover:text-blue-100 mb-1 transition-colors">Mes Tickets</h3>
-              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{ dashboard.assignedTickets.total }}</p>
+              <h3 class="text-sm font-medium text-gray-600 group-hover:text-blue-100 mb-1 transition-colors">Mes Tickets
+              </h3>
+              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{
+                dashboard.assignedTickets.total }}</p>
               <div class="mt-4 flex items-center text-sm">
                 <div class="flex-1 bg-gray-200 group-hover:bg-white/20 rounded-full h-2 overflow-hidden">
-                  <div class="bg-blue-600 group-hover:bg-white h-full rounded-full transition-all" :style="{ width: `${dashboard.stats.completionRate}%` }"></div>
+                  <div class="bg-blue-600 group-hover:bg-white h-full rounded-full transition-all"
+                    :style="{ width: `${dashboard.stats.completionRate}%` }"></div>
                 </div>
-                <span class="ml-3 text-sm font-semibold text-gray-600 group-hover:text-white transition-colors">{{ dashboard.stats.completionRate }}%</span>
+                <span class="ml-3 text-sm font-semibold text-gray-600 group-hover:text-white transition-colors">{{
+                  dashboard.stats.completionRate }}%</span>
               </div>
             </div>
           </div>
 
           <!-- Points -->
-          <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div
+            class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-green-500 to-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
             <div class="relative p-6">
               <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-green-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
-                  <svg class="w-6 h-6 text-green-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                <div
+                  class="w-12 h-12 bg-green-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-6 h-6 text-green-600 group-hover:text-white transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <span class="text-xs font-semibold text-green-600 group-hover:text-white bg-green-50 group-hover:bg-white/20 px-3 py-1 rounded-full transition-colors">
+                <span
+                  class="text-xs font-semibold text-green-600 group-hover:text-white bg-green-50 group-hover:bg-white/20 px-3 py-1 rounded-full transition-colors">
                   Cette semaine
                 </span>
               </div>
-              <h3 class="text-sm font-medium text-gray-600 group-hover:text-green-100 mb-1 transition-colors">Points Complétés</h3>
+              <h3 class="text-sm font-medium text-gray-600 group-hover:text-green-100 mb-1 transition-colors">Points
+                Complétés</h3>
               <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">
                 {{ getCompletedPoints() }}
                 <span class="text-lg text-gray-400 group-hover:text-green-100">/{{ getTotalAssignedPoints() }}</span>
@@ -113,21 +136,30 @@
           </div>
 
           <!-- Tests -->
-          <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div
+            class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
             <div class="relative p-6">
               <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-orange-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
-                  <svg class="w-6 h-6 text-orange-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <div
+                  class="w-12 h-12 bg-orange-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-6 h-6 text-orange-600 group-hover:text-white transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <span v-if="dashboard.testsToValidate.total > 0" class="text-xs font-semibold text-white bg-red-500 px-3 py-1 rounded-full animate-pulse">
+                <span v-if="dashboard.testsToValidate.total > 0"
+                  class="text-xs font-semibold text-white bg-red-500 px-3 py-1 rounded-full animate-pulse">
                   Action requise
                 </span>
               </div>
-              <h3 class="text-sm font-medium text-gray-600 group-hover:text-orange-100 mb-1 transition-colors">Tests à Valider</h3>
-              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{ dashboard.testsToValidate.total }}</p>
+              <h3 class="text-sm font-medium text-gray-600 group-hover:text-orange-100 mb-1 transition-colors">Tests à
+                Valider</h3>
+              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{
+                dashboard.testsToValidate.total }}</p>
               <p class="mt-2 text-sm text-gray-500 group-hover:text-orange-100 transition-colors">
                 {{ dashboard.testsToValidate.total > 0 ? 'En attente de validation' : 'Tout est à jour !' }}
               </p>
@@ -135,18 +167,26 @@
           </div>
 
           <!-- Activité -->
-          <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
-            <div class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div
+            class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden">
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity">
+            </div>
             <div class="relative p-6">
               <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-purple-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
-                  <svg class="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                <div
+                  class="w-12 h-12 bg-purple-100 group-hover:bg-white/20 rounded-xl flex items-center justify-center transition-colors">
+                  <svg class="w-6 h-6 text-purple-600 group-hover:text-white transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
               </div>
-              <h3 class="text-sm font-medium text-gray-600 group-hover:text-purple-100 mb-1 transition-colors">Mon Activité</h3>
-              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{ dashboard.stats.totalComments }}</p>
+              <h3 class="text-sm font-medium text-gray-600 group-hover:text-purple-100 mb-1 transition-colors">Mon
+                Activité</h3>
+              <p class="text-3xl font-bold text-gray-900 group-hover:text-white transition-colors">{{
+                dashboard.stats.totalComments }}</p>
               <p class="mt-2 text-sm text-gray-500 group-hover:text-purple-100 transition-colors">
                 {{ dashboard.stats.totalTests }} tests réalisés
               </p>
@@ -167,14 +207,13 @@
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
-            <button
-                v-for="(count, status) in dashboard.assignedTickets.byStatus"
-                :key="status"
-                @click="openStatusModal(status as TicketStatus)"
-                class="relative group text-center p-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-indigo-300"
-                :class="getStatusBgClass(status)"
-            >
-              <div class="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            <button v-for="(count, status) in dashboard.assignedTickets.byStatus" :key="status"
+              @click="openStatusModal(status as TicketStatus)"
+              class="relative group text-center p-4 rounded-xl transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-indigo-300"
+              :class="getStatusBgClass(status)">
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+              </div>
               <div class="relative">
                 <p class="text-3xl font-bold mb-2" :class="getStatusTextClass(status)">
                   {{ count }}
@@ -198,16 +237,19 @@
                   <div class="flex items-center space-x-3">
                     <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                       <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                     </div>
                     <div class="text-white">
                       <h2 class="text-lg font-bold">Attention Requise</h2>
-                      <p class="text-sm text-red-100">{{ dashboard.assignedTickets.urgent.length }} tickets prioritaires</p>
+                      <p class="text-sm text-red-100">{{ dashboard.assignedTickets.urgent.length }} tickets prioritaires
+                      </p>
                     </div>
                   </div>
                   <router-link to="/tickets">
-                    <button class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors">
+                    <button
+                      class="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-sm font-semibold transition-colors">
                       Voir tout
                     </button>
                   </router-link>
@@ -216,31 +258,34 @@
 
               <div class="p-6">
                 <div v-if="dashboard.assignedTickets.urgent.length > 0" class="space-y-4">
-                  <div
-                      v-for="ticket in dashboard.assignedTickets.urgent.slice(0, 5)"
-                      :key="ticket.id"
-                      @click="$router.push(`/tickets/${ticket.id}`)"
-                      class="group relative bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:border-indigo-400 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg"
-                  >
-                    <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div v-for="ticket in dashboard.assignedTickets.urgent.slice(0, 5)" :key="ticket.id"
+                    @click="$router.push(`/tickets/${ticket.id}`)"
+                    class="group relative bg-gradient-to-br from-gray-50 to-white border-2 border-gray-200 hover:border-indigo-400 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg">
+                    <div
+                      class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
 
                     <div class="relative flex items-start justify-between">
                       <div class="flex-1">
                         <div class="flex items-center space-x-2 mb-3">
-                          <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold shadow-sm" :class="getPriorityBadgeClass(ticket.priority)">
+                          <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold shadow-sm"
+                            :class="getPriorityBadgeClass(ticket.priority)">
                             {{ getPriorityIcon(ticket.priority) }}
                             {{ getPriorityLabel(ticket.priority) }}
                           </span>
                           <span class="text-sm font-mono text-gray-500">{{ ticket.key }}</span>
-                          <span v-if="ticket.isBlocked" class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">
+                          <span v-if="ticket.isBlocked"
+                            class="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold">
                             🔒 BLOQUÉ
                           </span>
                         </div>
-                        <h3 class="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                        <h3
+                          class="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-indigo-600 transition-colors">
                           {{ ticket.title }}
                         </h3>
                         <div class="flex items-center space-x-4 text-sm">
-                          <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold" :class="getStatusBadgeClass(ticket.status)">
+                          <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold"
+                            :class="getStatusBadgeClass(ticket.status)">
                             {{ getStatusLabel(ticket.status) }}
                           </span>
                           <span class="text-gray-500 font-medium">
@@ -255,7 +300,8 @@
                 <div v-else class="text-center py-16">
                   <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <p class="text-lg font-semibold text-gray-900 mb-1">Excellent travail ! 🎉</p>
@@ -271,13 +317,15 @@
                 <div class="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl border-l-4 border-blue-500">
                   <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
                   <div class="flex-1">
                     <p class="font-semibold text-gray-900">Dernier commentaire</p>
                     <p class="text-sm text-gray-600 mt-1">
-                      {{ dashboard.recentActivity.lastCommentDate ? formatDateRelative(dashboard.recentActivity.lastCommentDate) : 'Aucune activité récente' }}
+                      {{ dashboard.recentActivity.lastCommentDate ?
+                        formatDateRelative(dashboard.recentActivity.lastCommentDate) : 'Aucune activité récente' }}
                     </p>
                   </div>
                 </div>
@@ -285,13 +333,15 @@
                 <div class="flex items-start space-x-4 p-4 bg-green-50 rounded-xl border-l-4 border-green-500">
                   <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div class="flex-1">
                     <p class="font-semibold text-gray-900">Dernier test validé</p>
                     <p class="text-sm text-gray-600 mt-1">
-                      {{ dashboard.recentActivity.lastTestDate ? formatDateRelative(dashboard.recentActivity.lastTestDate) : 'Aucun test récent' }}
+                      {{ dashboard.recentActivity.lastTestDate ?
+                        formatDateRelative(dashboard.recentActivity.lastTestDate) : 'Aucun test récent' }}
                     </p>
                   </div>
                 </div>
@@ -324,23 +374,22 @@
                     <h2 class="text-lg font-bold">Tests à Valider</h2>
                     <p class="text-sm text-orange-100">{{ dashboard.testsToValidate.total }} en attente</p>
                   </div>
-                  <div v-if="dashboard.testsToValidate.total > 0" class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <div v-if="dashboard.testsToValidate.total > 0"
+                    class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
                     <span class="text-2xl font-bold text-white">{{ dashboard.testsToValidate.total }}</span>
                   </div>
                 </div>
               </div>
 
               <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                <router-link
-                    v-for="test in dashboard.testsToValidate.tests.slice(0, 5)"
-                    :key="test.id"
-                    :to="`/tickets/${test.ticketKey.split('-')[1]}`"
-                    class="block px-6 py-4 hover:bg-orange-50 transition-colors"
-                >
+                <router-link v-for="test in dashboard.testsToValidate.tests.slice(0, 5)" :key="test.id"
+                  :to="`/tickets/${test.ticketKey.split('-')[1]}`"
+                  class="block px-6 py-4 hover:bg-orange-50 transition-colors">
                   <div class="flex items-start space-x-3">
                     <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
                     <div class="flex-1 min-w-0">
@@ -361,7 +410,8 @@
                 <div v-if="dashboard.testsToValidate.tests.length === 0" class="px-6 py-16 text-center">
                   <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <p class="text-sm font-semibold text-gray-900">Tout est à jour !</p>
@@ -374,21 +424,26 @@
             <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg p-6 text-white">
               <h3 class="text-lg font-bold mb-4">Actions Rapides</h3>
               <div class="space-y-3">
-                <router-link to="/tickets/create" class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+                <router-link to="/tickets/create"
+                  class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                   </svg>
                   <span class="font-medium">Créer un ticket</span>
                 </router-link>
-                <router-link to="/sprint/kanban" class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+                <router-link to="/sprint/kanban"
+                  class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                   </svg>
                   <span class="font-medium">Voir le Kanban</span>
                 </router-link>
-                <router-link to="/tests" class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
+                <router-link to="/tests"
+                  class="flex items-center space-x-3 p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                   <span class="font-medium">Gérer les tests</span>
                 </router-link>
@@ -399,12 +454,8 @@
       </div>
     </div>
 
-    <TicketsByStatusModal
-        v-model="showStatusModal"
-        :status="selectedStatus"
-        :tickets="filteredTickets"
-        :loading="loadingTickets"
-    />
+    <TicketsByStatusModal v-model="showStatusModal" :status="selectedStatus" :tickets="filteredTickets"
+      :loading="loadingTickets" />
   </div>
 </template>
 
