@@ -1,6 +1,5 @@
 <template>
   <div class="max-w-5xl mx-auto space-y-6">
-    <!-- Header avec retour -->
     <div class="flex items-center justify-between">
       <div class="flex items-center space-x-4">
         <button
@@ -20,12 +19,10 @@
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
 
-    <!-- Error State -->
     <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4">
       <div class="flex items-center">
         <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +33,6 @@
     </div>
 
     <template v-else-if="ticket">
-      <!-- 1. DÉTAILS DU TICKET -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -80,7 +76,6 @@
         </div>
       </div>
 
-      <!-- 2. FORMULAIRE DE RÉDACTION DU TEST -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Rédiger le test</h3>
 
@@ -90,7 +85,6 @@
               Description du test *
             </label>
 
-            <!-- Éditeur de texte riche -->
             <TextEditor
                 v-model="testDescription"
                 min-height="300px"
@@ -104,13 +98,11 @@
             </TextEditor>
           </div>
 
-          <!-- Zone d'upload d'images -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Captures d'écran (optionnel)
             </label>
 
-            <!-- Input file caché -->
             <input
                 ref="fileInput"
                 type="file"
@@ -120,42 +112,103 @@
                 class="hidden"
             />
 
-            <!-- Bouton d'upload -->
-            <button
-                type="button"
+            <div
                 @click="triggerFileInput"
-                class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-indigo-400 hover:bg-indigo-50 transition-colors flex items-center justify-center space-x-2 text-gray-600"
+                @dragover.prevent="isDragging = true"
+                @dragleave.prevent="isDragging = false"
+                @drop.prevent="handleFileDrop"
+                :class="[
+                  'w-full px-4 py-3 border-2 border-dashed rounded-lg transition-all cursor-pointer',
+                  isDragging 
+                    ? 'border-indigo-600 bg-indigo-100' 
+                    : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50',
+                  selectedImages.length >= maxImages 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                ]"
             >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Cliquez pour ajouter des images ou glissez-les ici</span>
-            </button>
+              <div class="flex items-center justify-center space-x-2 text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span>{{ isDragging ? 'Déposez les images ici' : 'Cliquez pour ajouter des images ou glissez-les ici' }}</span>
+              </div>
+            </div>
 
-            <!-- Prévisualisation des images -->
-            <div v-if="selectedImages.length > 0" class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div
-                  v-for="(image, index) in selectedImages"
-                  :key="index"
-                  class="relative group"
-              >
-                <img
-                    :src="image.preview"
-                    :alt="`Capture ${index + 1}`"
-                    class="w-full h-40 object-cover rounded-lg border border-gray-200"
-                />
-                <button
-                    type="button"
-                    @click="removeImage(index)"
-                    class="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                    title="Supprimer"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            <div v-if="selectedImages.length > 0 || loadingImages" class="mt-4 space-y-2">
+              <div v-if="loadingImages" class="flex items-center space-x-2 text-sm text-indigo-600 bg-indigo-50 p-3 rounded-lg">
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Chargement des images...</span>
+              </div>
+
+              <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <span class="font-medium">{{ selectedImages.length }}/{{ maxImages }} image(s)</span>
+                <span class="text-xs text-gray-500 flex items-center">
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                   </svg>
-                </button>
-                <div class="absolute bottom-2 left-2 px-2 py-1 bg-black bg-opacity-60 text-white text-xs rounded">
-                  {{ formatFileSize(image.file.size) }}
+                  Glissez pour réorganiser
+                </span>
+              </div>
+              
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div
+                    v-for="(image, index) in sortedImages"
+                    :key="image.id"
+                    class="relative group cursor-move bg-gray-100 rounded-lg overflow-hidden"
+                    draggable="true"
+                    @dragstart="handleDragStart(index, $event)"
+                    @dragover.prevent="handleDragOver(index, $event)"
+                    @drop="handleDrop(index, $event)"
+                    @dragend="handleDragEnd"
+                    :class="{ 'opacity-50 scale-95': draggedIndex === index }"
+                >
+                  <div class="absolute top-2 left-2 z-20 px-2.5 py-1 bg-indigo-600 text-white text-xs font-bold rounded-full shadow-lg border-2 border-white">
+                    #{{ image.displayOrder }}
+                  </div>
+
+                  <div class="relative w-full h-40 border-2 border-gray-200 group-hover:border-indigo-400 transition-all rounded-lg overflow-hidden bg-gray-50">
+                    <img
+                        v-if="image.preview"
+                        :src="image.preview"
+                        :alt="`Capture ${image.displayOrder}`"
+                        class="absolute inset-0 w-full h-full object-cover"
+                        @error="handleImageError(image)"
+                        @load="handleImageLoad(image)"
+                    />
+                    
+                    <div v-else class="absolute inset-0 flex items-center justify-center text-gray-400">
+                      <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    
+                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all pointer-events-none"></div>
+                  </div>
+                  
+                  <button
+                      type="button"
+                      @click.stop="removeImage(index)"
+                      class="absolute top-2 right-2 z-20 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700 shadow-lg"
+                      title="Supprimer l'image"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  
+                  <div class="absolute bottom-2 left-2 z-10 px-2 py-1 bg-black bg-opacity-70 text-white text-xs rounded shadow">
+                    {{ formatFileSize(image.file.size) }}
+                  </div>
+
+                  <div class="absolute bottom-2 right-2 z-10 p-1.5 bg-black bg-opacity-70 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity shadow">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -165,13 +218,11 @@
             </p>
           </div>
 
-          <!-- Validation errors -->
           <div v-if="validationError" class="bg-red-50 border border-red-200 rounded-lg p-3">
             <p class="text-sm text-red-800">{{ validationError }}</p>
           </div>
 
-          <!-- Actions -->
-          <div class="flex items-center justify-end space-x-3 pt-4">
+          <div class="flex items-center justify-end space-x-3 pt-4 border-t">
             <button
                 type="button"
                 @click="goBack"
@@ -182,7 +233,7 @@
             </button>
             <button
                 type="submit"
-                class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="px-6 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                 :disabled="submitting || currentTextLength < 10"
             >
               <span v-if="submitting" class="flex items-center">
@@ -198,7 +249,6 @@
         </form>
       </div>
 
-      <!-- 3. TESTS PRÉCÉDENTS ÉCHOUÉS (si existants) -->
       <div v-if="tests.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-6">
         <div class="flex items-center mb-4">
           <svg class="w-5 h-5 text-red-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +283,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TextEditor from '@/components/common/TextEditor.vue';
 import TextViewer from '@/components/common/TextViewer.vue';
@@ -254,10 +304,26 @@ const testDescription = ref('');
 const currentTextLength = ref(0);
 const submitting = ref(false);
 
-// Gestion des images
+interface ImageWithOrder {
+  id: string;
+  file: File;
+  preview: string;
+  displayOrder: number;
+}
+
 const fileInput = ref<HTMLInputElement | null>(null);
-const selectedImages = ref<Array<{ file: File; preview: string }>>([]);
+const selectedImages = ref<ImageWithOrder[]>([]);
 const maxImages = 10;
+
+const draggedIndex = ref<number | null>(null);
+
+const isDragging = ref(false);
+
+const loadingImages = ref(false);
+
+const sortedImages = computed(() => {
+  return [...selectedImages.value].sort((a, b) => a.displayOrder - b.displayOrder);
+});
 
 async function loadTicketData() {
   loading.value = true;
@@ -271,8 +337,8 @@ async function loadTicketData() {
     }
 
     const details = await ticketApi.getDetails(ticketId);
+    console.log(details)
     ticket.value = details;
-    // Tous les tests affichés sont considérés comme échoués (non validés)
     tests.value = (details.tests || []).filter(test => !test.isValidated);
   } catch (err: any) {
     error.value = err.response?.data?.message || 'Erreur lors du chargement du ticket';
@@ -283,45 +349,173 @@ async function loadTicketData() {
 }
 
 function triggerFileInput() {
-  fileInput.value?.click();
+  if (selectedImages.value.length < maxImages) {
+    fileInput.value?.click();
+  }
+}
+
+function handleFileDrop(event: DragEvent) {
+  isDragging.value = false;
+  
+  if (selectedImages.value.length >= maxImages) {
+    validationError.value = `Vous avez atteint la limite de ${maxImages} images`;
+    return;
+  }
+
+  const files = event.dataTransfer?.files;
+  if (files) {
+    processFiles(Array.from(files));
+  }
 }
 
 function handleFileSelect(event: Event) {
   const target = event.target as HTMLInputElement;
   const files = target.files;
 
-  if (!files) return;
+  if (files && files.length > 0) {
+    processFiles(Array.from(files));
+  }
 
+  target.value = '';
+}
+
+function processFiles(files: File[]) {
   const remainingSlots = maxImages - selectedImages.value.length;
-  const filesToAdd = Array.from(files).slice(0, remainingSlots);
+  
+  if (remainingSlots <= 0) {
+    validationError.value = `Vous avez atteint la limite de ${maxImages} images`;
+    return;
+  }
 
-  filesToAdd.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        selectedImages.value.push({
-          file,
-          preview: e.target?.result as string
-        });
-      };
-      reader.readAsDataURL(file);
-    }
+  const filesToAdd = files.slice(0, remainingSlots);
+  const imageFiles = filesToAdd.filter(file => file.type.startsWith('image/'));
+
+  if (imageFiles.length === 0) {
+    validationError.value = 'Aucune image valide sélectionnée';
+    return;
+  }
+
+  if (imageFiles.length < filesToAdd.length) {
+    console.warn(`${filesToAdd.length - imageFiles.length} fichier(s) non-image ignoré(s)`);
+  }
+
+  loadingImages.value = true;
+
+  const nextOrder = selectedImages.value.length > 0
+    ? Math.max(...selectedImages.value.map(img => img.displayOrder)) + 1
+    : 1;
+
+  let loadedCount = 0;
+
+  imageFiles.forEach((file, index) => {
+    const reader = new FileReader();
+    const imageId = `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    reader.onload = (e) => {
+      const result = e.target?.result;
+      if (result && typeof result === 'string') {
+        selectedImages.value = [
+          ...selectedImages.value,
+          {
+            id: imageId,
+            file: file,
+            preview: result,
+            displayOrder: nextOrder + index
+          }
+        ];
+        console.log(`Image ajoutée: ${file.name}, ordre: ${nextOrder + index}, preview length: ${result.length}`);
+      } else {
+        console.error('Échec de lecture du fichier:', file.name);
+      }
+      
+      loadedCount++;
+      if (loadedCount === imageFiles.length) {
+        loadingImages.value = false;
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error('Erreur de lecture du fichier:', file.name, error);
+      validationError.value = `Erreur lors du chargement de ${file.name}`;
+      
+      loadedCount++;
+      if (loadedCount === imageFiles.length) {
+        loadingImages.value = false;
+      }
+    };
+
+    reader.readAsDataURL(file);
   });
 
-  // Reset input
-  if (target) {
-    target.value = '';
+  // Clear validation error si tout va bien
+  if (validationError.value?.includes('limite')) {
+    validationError.value = null;
   }
 }
 
 function removeImage(index: number) {
-  selectedImages.value.splice(index, 1);
+  const imageToRemove = sortedImages.value[index];
+  const actualIndex = selectedImages.value.findIndex(img => img.id === imageToRemove.id);
+  
+  if (actualIndex !== -1) {
+    selectedImages.value.splice(actualIndex, 1);
+    reorderImages();
+  }
+}
+
+function reorderImages() {
+  const sorted = sortedImages.value;
+  sorted.forEach((image, index) => {
+    const actualImage = selectedImages.value.find(img => img.id === image.id);
+    if (actualImage) {
+      actualImage.displayOrder = index + 1;
+    }
+  });
+}
+
+function handleDragStart(index: number, event: DragEvent) {
+  draggedIndex.value = index;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+  }
+}
+
+function handleDragOver(index: number, event: DragEvent) {
+  if (draggedIndex.value === null || draggedIndex.value === index) return;
+  
+  event.preventDefault();
+  
+  const draggedImage = sortedImages.value[draggedIndex.value];
+  const targetImage = sortedImages.value[index];
+  
+  const tempOrder = draggedImage.displayOrder;
+  draggedImage.displayOrder = targetImage.displayOrder;
+  targetImage.displayOrder = tempOrder;
+  
+  draggedIndex.value = index;
+}
+
+function handleDrop(index: number, event: DragEvent) {
+  event.preventDefault();
+}
+
+function handleDragEnd() {
+  draggedIndex.value = null;
 }
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function handleImageError(image: ImageWithOrder) {
+  console.error('Erreur de chargement de l\'image:', image.file.name);
+  console.log('Preview src:', image.preview?.substring(0, 50) + '...');
+}
+
+function handleImageLoad(image: ImageWithOrder) {
+  console.log('Image chargée avec succès:', image.file.name);
 }
 
 async function submitTest() {
@@ -346,9 +540,16 @@ async function submitTest() {
     formData.append('description', testDescription.value);
     formData.append('type', 'TEST_ATTACHMENT');
 
-    selectedImages.value.forEach((image) => {
+    const sorted = sortedImages.value;
+    sorted.forEach((image) => {
       formData.append('images', image.file);
     });
+
+    const displayOrders = sorted.map(img => img.displayOrder);
+    
+    formData.append('displayOrders', JSON.stringify(displayOrders));
+
+    console.log('Submitting test with displayOrders:', displayOrders);
 
     await testApi.createForTicket(ticket.value.id, formData);
 
